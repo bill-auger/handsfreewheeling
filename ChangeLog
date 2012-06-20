@@ -1,0 +1,1014 @@
+IN PROGRESS v0.6.1 - SVN
+
+            Thursday March 17, 2011
+ 
+            * Multi-track streaming. 
+
+              Now you can stream each input to disk,
+              stream loops to disk,
+              and stream the whole final
+              mix to disk. Control what to stream from basics.xml:
+
+              This allows you to do more precise edits after a performance.
+              It is especially useful for live microphone pickups, which
+              often require separate gain and FX adjustments during later
+              editing.
+
+              <var streaminputs="NYYN"/>
+              <var streamfinalmix="N"/>
+              <var streamloopmix="Y"/>
+
+              As always, the disk streams can be toggled in real-time with the
+              PrintScreen key (see help). Freewheeling finds an unused
+              filename for each new stream. The streams are time-aligned,
+              so they can be loaded as tracks into a multi-track sequencer.
+
+            Thursday March 10, 2011
+
+            * Configurable soft monitoring is now available in basics.xml:
+
+            <var audioinputmonitoring="YYNN"/>
+
+            * QTractor OSC integration is now working.
+
+            Saturday February 26, 2011
+
+            After more than two years, activity has resumed on Freewheeling's
+            development. I am in the process of refactoring the code to make 
+            it more stable.
+
+            New Features in the works:
+
+            * DONE - Direct hardware mixing controls
+ 
+              Direct control of ALSA mixer controls from within Freewheeling
+
+            * DONE - SYNTHEDIT - An easier way to manage synth plugins with
+              
+              MANY parameters from a tactile interface with
+              FEW knobs - stores parameters and allows motor-fader
+              updates
+
+            * FIXED - MIDI Sync Transmit now works as advertised -
+    
+              Loops stay in lockstep with externals
+              Added MIDI sync metronome for listening to beats/bars.
+
+            * QTractor integration. 
+
+              Rui Nuno Capela and I are working on a QTractor branch that
+              will allow snapshots of all playing loops to be instantly
+              transferred into a QTractor session. Go from circular time
+              to sequencer time! This SVN update contains proof-of-concept
+              code against the 'qtractor-osc' branch.
+            
+            Tuesday January 20th, 2009
+
+            New Features
+            ------------
+
+            * A proper BCF-2000 Preset (SYSEX Dump Format) is now 
+              included
+              
+              See data/bcf2000-help.txt for instructions if you use a 
+              BCF-2000.
+
+            * Snapshot moving
+            
+              ALT-P swaps the last two selected snapshots.
+            
+            * Z/X paging through loops now works across interfaces (BCF-2000, MIDI keyboard, ...)
+
+            Sunday December 28th, 2008
+
+            New Features
+            ------------
+
+            * As part of ongoing work to make Freewheeling more reliable,
+              crash reports are now automatically generated if GDB is installed. 
+              The type of crash is printed on the terminal. The report is saved to file 'fweelin-stackdump'.
+              
+              If you encounter a crash, please send me this file along with a description of what you were doing
+              when the crash occurred. Thank you.
+
+            Fixes
+            -----
+            
+            * Fixed an overdub crash with the new triggering method
+            * Fixed a positioning bug when recording loops with the new triggering method
+
+            Friday December 25th, 2008
+                        
+            New Features
+            ------------
+
+            * This version uses an experimental new way of triggering loops. The loops always play immediately when triggered,
+              and they start in the right place. 
+              
+              The 'right place' is given by a 'long count', which is the overall pattern
+              of all loops. This method allows switching between snapshots mid-phrase 
+              without a loss of positioning, and triggering new snapshots before the downbeat to catch pickup notes. 
+              
+              Musically, the long count is the length of the larger musical phrase which is described by all the loops.
+              Mathematically, the long count's length is the LCM (Lowest Common Multiple) of the length of all loops that have been 
+              activated. 
+              
+              (Example) For a scene with loops with length 1, 2, 4, and 8 beats, the long count is 8 beats. 
+              For a scene with loops length 4 and 3 beats, the long count is 12 beats.
+              
+              You don't really have to think about the long count. 
+              But it's helpful to know that the long count is defined so that when it rolls over, 
+              all loops are rolling over to their start points.
+              You can see the long count visually in an outer ring of the pulse display (top right).
+                            
+              The old triggering method is no longer in this version. I would appreciate any feedback you might have on how this
+              new method works for you.
+              
+              Happy Holidays!
+              -Mercury
+              
+            Tuesday October 28th, 2008
+            
+            New Features
+            ------------
+
+            * Automatic bypassing of unused channels now works with combi patches across many zones
+            
+            Sunday October 19th, 2008
+            
+            New Features
+            ------------
+
+            * Improved MIDI handling with automatic bypassing of unused channels
+
+              This new feature keeps track of which patches are active and recently used, and which have sustaining notes either with
+              or without pedal. FreeWheeling will automatically send out a configurable MIDI CC on those channels that are inactive,
+              and another CC when those channels become active. As I'm playing, FreeWheeling automatically frees up CPU from
+              unused plugin channels on my plugin hardware rack.
+              
+              You can use this feature with any plugin host that will bypass/unbypass channels via MIDI CC. I use it with a 
+              Muse Research Receptor.
+
+              ** Patch changes are now registered when you SELECT a patch. Browsing to the patch does not switch patches.
+              Now, you must move to the new patch and press ENTER or a MIDI select button.
+
+              For example, the following in a patch definition file:
+              
+              <patch bypasstime1="60" bypasstime2="5" channel="0" name="Piano"/>
+              
+              Defines a piano patch sending on channel 0 (1st MIDI channel). After 60 seconds of unreleased sustained notes, 
+              when the channel is inactive, it will be bypassed. 5 seconds after all notes are released with the sustain pedal up,
+              and once the channel is inactive, it will be bypassed. This follows the natural decay of a piano- long sustain, short
+              release. I can play piano notes, hold them, and switch to another channel. When I release those piano notes, the appropriate
+              notes are released and the channel is bypassed soon after. I am already continuing on with whatever new patch I'm playing.
+              
+              <patch bypasschannel="5" channel="10" name="D: Toms"/>
+              <patch bypasschannel="5" channel="11" name="D: Snare"/>
+
+              Here, two drum patches that receive on channel 10 and 11 are defined. They are both bypassed via channel 5. 
+              I use this with multitimbral plugins that receive on several channels but are bypassed as one.
+              
+              To enable auto-bypass, you must define a MIDI CC to use. This can be defined for each patch or combi zone, but is
+              more easily defined for a whole patchbank (from browsers.xml):
+              
+              <patchbank bypasscc="116" midiport="1" separatechannels="0" suppressprogramchanges="1" patches="patches-receptor-1.xml"/>
+
+              Here MIDI CC #116 is used to auto-bypass channels on the Receptor.
+              You can also set default values for bypasstime1 and bypasstime2 on a per-patchbank basis.
+              
+            Fixes
+            -----
+            
+            * Fixed doubling of MIDI note-off messages
+            
+RELEASE     v0.6
+
+            Friday October 3rd, 2008
+            
+            Folks,
+            
+            Here is a full 0.6 release. 
+            Included are updated Mac and Linux versions. 
+            The new Mac version works with the latest Jack 
+            version and under OS X Leopard. 
+            
+            As you can see from the SVN updates below, 
+            there's quite a bit that's new since 0.5.5.
+            
+            Your feedback is always welcome.
+            
+            -~Mercury
+            
+            v0.5.6 - SVN
+
+            Thursday September 4th, 2008
+            
+            New Features
+            ------------
+
+            * Logarithmic faders and loop levels, conforming to IEC 60-268-18.
+            
+              Level meters and loop faders are now logarithmic, visually graded with 6dB markings.
+              This means you can create much smoother fades using MIDI controllers,
+              and you can see a broader range of levels on-screen.
+              
+              One new configuration parameter controls the maximum dB selectable:
+              
+              <!-- dB at maximum throw for audio faders- how loud can you fade in dB? for example +6 dB -->
+              <var fadermaxdb="6"/>
+
+            Saturday August 30th, 2008
+
+            Fixes
+            -----
+
+            * Saving over existing snapshots now preserves name
+
+            * Upgrades to BCF-2000 template
+            
+            Wednesday August 13th, 2008
+            
+            New Features
+            ------------
+            
+            * Rename snapshots
+              
+              Press ALT-1 through ALT-9 to rename a snapshot.
+              Label your song sections for easy recall.
+              
+            * Way overhauled BCF-2000 interface
+            
+              The Behringer BCF-2000 MIDI template has been overhauled. 
+              Most major functions can be controlled from the surface.
+              Continuously variable loop volumes, overdubs on knob presses,
+              loop selection and triggering, scenes, pulses, and multiple
+              pages of loops. The whole template can be customized by editing
+              the MIDI CC variables at the top of the file.
+              
+              By changing the CCs, you can use it as a template for other control
+              surfaces. A future configuration editor may build on this concept
+              of 'templates with editable settings'. For now, 
+              you can edit the file and adjust the most common commands easily.
+            
+            Saturday July 5th, 2008
+
+            New Features
+            ------------
+
+            * Multiple pages of snapshots
+              
+              100 snapshots are provided by default (edit this in
+              basics.xml). You can pageup/pagedown through them by holding
+              CTRL or SHIFT and pressing , or .
+
+              Then use CTRL 1-9 to trigger and SHIFT 1-9 to store.
+
+            Fixes
+            -----
+
+            * Reworked some of the guts to fix crashes. Race condition 
+              fixes in block manager.
+
+              Thanks to Florent and Andrea for your crash reports. 
+              They helped nail the bug.
+        
+            Monday Jun 16th, 2008
+
+            New Features
+            ------------
+
+            * Create snapshots for playing loops
+         
+              - Create / save / load snapshots. All loop levels and playing
+                loops are remembered.
+              
+                To create a snapshot, hold SHIFT and press 1-9.
+                The snapshot is shown in a popup window.
+        
+              - An easy way to switch between song sections.
+
+                To switch snapshots, hold CTRL and press 1-9.
+                
+              - Snapshots are saved/loaded in scenes. 
+
+              Still to do on snapshots: Renaming, fading, 
+              paging through snapshots on display, more flexible 
+              synchronization.
+        
+            * Easily adjust levels for all selected loops
+
+              To use: Select some loops. Hold CTRL and press UP/DOWN repeatedly
+              to adjust all loop levels. Or, hold CTRL and use the mousewheel
+              on any loop. All selected loops are adjusted.
+
+              This works well when you have many loops that are overdriving
+              Freewheeling's outputs. The limiter is bouncing around. You could
+              reduce the output level, but this approach is more flexible- and 
+              the results are saved in snapshots and scenes.
+        
+            Friday Nov 9th, 2007
+
+            New Features
+            ------------
+
+            * Completely revamped configuration system-
+
+              Better splitting and organization-
+                There are now many configuration files.
+              The configuration is divided into 'interfaces'.
+              Each interface defines behavior and display related to
+                a hardware interface. 
+              You can build whole functionality for a given MIDI interface
+                such as a fader box, and share it on the Internet.
+              This should help the current situation where people are 
+              patching together bits of each other's configurations.
+
+            Sunday July 8th, 2007
+
+            New Features
+            ------------
+
+            * Working on real-time pitch and time stretching- 
+              not yet usable!
+               
+            * Adjustable global tuning for Fluidsynth:
+
+              From .fweelin.rc:
+              <fluidsynth tuning="-31.76"/>
+
+              Adjusts Fluidsynth to -31.76 cents tuning, or 432 Hz
+              tuning.
+
+            Fixes
+            -----
+        
+            * Fixed a bug where some non-critical events (such as loading
+              or selecting loops) could be missed.
+
+            * Fixed glitch in memory manager that could cause 
+              spontaneous exits, usually when erasing loops
+        
+            * Better clipping of out-of-range MIDI values
+
+            * Removed old 'DelayProcess' code for dealing with real-time
+              events. New code uses real-time event manager.
+
+            Tuesday March 13th, 2007
+        
+            New Features
+            ------------
+
+            * Erase-selected-loops command
+
+              Shift+Space now erases all selected loops.
+              
+            * New ability to tag patch banks
+
+              By tagging patch banks, you can change the way Freewheeling
+              responds depending on which patches you have selected. 
+
+              For example, I use Freewheeling with a B3 organ softsynth. 
+              My organ patches are arranged in a patch bank. I've tagged that
+              patch bank, and configured Freewheeling to respond differently
+              when that patch bank is active. So, when I am on an organ patch,
+              my faders control the B3 drawbars instead of their usual
+              Freewheeling functions.
+        
+              You can, of course, change any of Freewheeling's behaviors
+              depending on the patch bank selected. 
+        
+              For more info, check the 'SYSTEM_cur_patchbank_tag' variable 
+              in the configuration.
+              
+            * Receive and transmit MIDI channel pressure (aftertouch) messages
+
+            * New 'routethroughpatch' configuration option for MIDI 
+              events allows you to send deliberate MIDI messages to the 
+              port(s) and channel(s) for the current patch. 
+              
+              An example configuration is provided that changes the behavior 
+              of the modwheel (CC #1). When enabled, the modwheel value is 
+              modulated by aftertouch. This allows me to control vibrato 
+              (CC #1) on my softsynths with pressure on the keys. 
+              The modwheel and pressure values are summed together and 
+              sent out as a control change message.
+
+              If I am playing several softsynth channels from my one keyboard,
+              the aftertouch then affects all the channels seamlessly.
+                
+            Fixes
+            -----
+
+            * Fixed problem installing configuration files from
+              folders with spaces. 
+            
+2007-01-25  v0.5.5
+
+            New Features
+            ------------
+
+            * MIDI sync transmit
+ 
+              - Toggle-able sync transmit on definable output ports
+
+              A friend of mine who is an avid Ableton Live user asked me
+              to collaborate with him. I realized that this was a perfect
+              opportunity to develop MIDI sync. Freewheeling already
+              syncs via the Jack transport, but Ableton and other 
+              hardware sequencers are not Jack-aware. 
+
+              As of this version, 
+              Freewheeling transmits MIDI sync on definable MIDI
+              outs. By default, MIDI clock is sent to the first MIDI
+              output. To send MIDI clock, you must first enable it--
+              Go to the sync panel (shift+F1) and press shift+F2.
+              MIDI Sync Transmit is now enabled (the light glows).
+
+              Now, you can begin playing, and create a pulse. 
+              You can either tap the pulse tempo, or you can record a
+              loop and use it as the pulse tempo.
+ 
+              Once the pulse begins, Freewheeling starts the external
+              sequencer at bar 1. If you deselect the pulse 
+              (F6 for free timing), Freewheeling will stop your external
+              sequencer. Any pulse you select will begin transmitting
+              MIDI sync.
+
+              Freewheeling does not yet receive MIDI sync, so you can't
+              yet use Ableton as tempo master.
+
+            * Selecting and working with multiple loops
+
+              You can now toggle (t) and fade (MIDI CC89) volume of
+              several loops together. 
+  
+              You can select loops by right clicking on them, or by
+              shift+clicking on them, or by shift+pressing their trigger.
+ 
+              You can select all playing loops by pressing the keypad 
+              asterisk. You can select all idle loops with 
+              shift+kp asterisk. Ctrl+kp asterisk inverts the current
+              selection, and alt+kp asterisk unselects all loops.
+
+              This is the first step towards having multiple scenes
+              of loops that you can trigger/fade between.
+
+            * New configuration allows MIDI control of:
+
+              Undo- CC#51
+              Patch bank changing by fader- CC #88
+              Patch bank changing by buttons- CC #53 / #54
+              
+            * Continuously variable feedback for overdubs
+
+              You can now change the loop feedback during overdubbing.
+              You can realtime vary the amount of the loop that is fed-back
+              into itself. The current feedback level is shown on-screen.
+            
+              By default, MIDI CC#87 controls the loop feedback. 
+              The feedback controls are configurable in .fweelin.rc, here:
+            
+              <!-- Which MIDI controller # controls overdub feedback. -->
+              <declare var="VAR_overdubfeedback_midicontrol" type="int" init="87"/>
+              <declare var="VAR_overdubfeedback" type="float" init="0.8"/>
+
+            * New configuration allows browsing via MIDI program change
+              
+              I developed this config for the CME-UF8 master controller, which
+              has a rotary encoder that sends MIDI program change messages.
+              With the new config, a MIDI program change knob can be used
+              to spin through scenes, loops, or softsynth patches.
+
+              Also, controller #50 is configured to act as a shift key for
+              faster scrolling through browsers.
+
+            * Save Current Scene (F7) now overwrites an existing scene.
+        
+            * Save New Scene (shift + F7) forces a new scene to be created.
+            
+              When overwriting, sequential backups are made 
+              with the extensions '.backup.1' '.backup.2' etc. 
+              Scene file data is very small. 
+              Loops are stored separately, 
+              so there is no duplication of unmodified loops.
+
+            * Sync panel can now be toggled with Shift-F1
+              Defaults to OFF
+
+            Fixes
+            -----
+
+            - Better stability in Event Manager- should fix crashes
+        
+            - Deliberate MIDI output of events now follows the ports and 
+              channels you specify. Incidental echoing of MIDI events follows
+              the settings from the current patch.
+        
+            - Fixed crash on repeat loading of scenes/loading of large scenes
+
+            - No more console-dependent startup questions when a new
+              version is installed.
+ 
+            - Library path can now be specified relative to home folder
+              (for example, ~/fw-lib)
+
+            - Stream out now shows size in mb, for less frantic update
+
+2006-11-21  v0.5.3
+
+            Many thanks to Danni Coy, who has contributed very significantly to
+            this release. Actually, he did most of the work!
+                
+            New Features
+            ------------
+
+            * MAC OS X support
+
+              FreeWheeling is now cross-platform. 
+              A universal binary is now available for both Intel & PPC Mac
+              platforms. 
+
+            * Multiple Audio Formats
+              (Contributed by Danni- Thank You!)
+
+              Save and load loops and live streams in
+              OGG, WAVE, AU, and FLAC.
+
+            * OGG encoding quality setting in configuration
+
+            * More flexible MIDI control of external synths.
+
+              - Combination patches allow you to split one MIDI controller
+                into a range of zones. This allows you to control several
+                different sounds or softsynths from one MIDI control source.
+                
+                A combipatch defines the zones, as well as the output MIDI 
+                port and channel that each zone sends to. You can also send
+                MIDI program and bank change messages for each zone, allowing
+                you to switch programs on external synths. 
+
+                All of this functionality is integrated into the patch browser,
+                so you can seamlessly control other synth apps and 
+                sound modules from within FreeWheeling. 
+                
+                See 'examples/combipatchdemo.xml' for an example 
+                configuration.
+                
+              - Added 'suppressprogramchanges' option for patch banks
+
+                With suppressprogramchanges=1, no MIDI bank and program change
+                messages are sent when patches are changed within a patch bank.
+                This is useful when you have a softsynth loaded with patches on
+                different channels and you merely want to switch channels-
+                each patch is mapped to a different channel, but you don't want
+                program change messages being sent to mess up your patches. 
+
+                Use this for banks of Linuxsampler channels.
+        
+              - Added 'separatechannels' option for patch banks
+
+                With separatechannels=0, patches mapped to different channels
+                appear in the same patch bank. With this option, you can have a
+                collection of several patches on different channels that appear
+                together in one list for browsing. This is useful for sampling
+                synths where your patches are pre-loaded onto channels.
+        
+                With separatechannels=1, the old behavior is used. 
+                The old behavior splits each channel into a separate bank.
+                This works well for DSSI softsynths, where many synths run on
+                the same port, but each channel accesses a different synth and
+                different set of patches.
+
+            Fixes
+            -----
+        
+            * MIDI thread now runs at high priority FIFO, rather than
+              low priority FIFO-- this may improve MIDI performance,
+              and hopefully will not affect stability.
+        
+            * Fixed configuration bug that broke 'CTRL+click' loop renaming.
+            
+2006-05-17  v0.5.2a
+
+            Bug Fix Release
+            ---------------
+
+            * v0.5.2 MIDI port switching was broken.
+              (Problem in the configuration .fweelin.rc). 
+              The configuration in this release should work.
+
+              No other changes have been made.
+
+2006-05-13  v0.5.2
+
+            The Patch Browser Upgrade
+        
+            New Features
+            ------------
+            
+            * Integrated patch browsers for external audio apps
+
+            * Bank and program changes are now sent based on the patches
+              you define
+
+            * MIDI outputs are now switched as part of the integrated
+              patch browser
+
+            * Automatic patch list generation for DSSI softsynths
+              
+              Detail:
+        
+              The Fluidsynth patch browser has been expanded to provide
+              patch browsing for external synths/apps.
+              You can define your patches (MIDI port, channel, bank, program, 
+              and name) in external XML patch files.
+             
+              All your patches, internal and external, now appear in the
+              patch browser. The browser now has several pages,
+              one for each MIDI port and channel for which you have defined
+              patches. Therefore, if you have Hexter on channel 1 of MIDI
+              output 1, and WhySynth on channel 2 of MIDI output 1, you can
+              independently browse your Hexter and WhySynth patches right from
+              within Freewheeling.
+
+              Freewheeling sends the right bank and program changes out the
+              right MIDI port based on your patch definitions. It also echoes
+              your MIDI events to the right place, so that you can switch
+              one keyboard between several softsynths.
+        
+              When you have the patch browser selected, you can use the
+              left/right arrow keys to switch between browser sections.
+              This causes your incoming MIDI events to be switched from
+              one port to another- as defined in your ~/.fweelin.rc and
+              patch XML files. This way, you can quickly 
+              switch between softsynths without leaving Freewheeling's 
+              interface.
+
+              To use this feature, please read 'examples/readme.txt' for setup
+              info.
+
+              I will likely be expanding this to include 'combi' type
+              actions where you can custom configure your MIDI signal to be
+              sent to several softsynths. Then you could, for example,
+              play Hexter with your left hand and Linuxsampler with your
+              right hand.
+
+            * Configuration files now live in ~/.fweelin/
+
+              ~/.fweelin.rc will be moved to ~/.fweelin/.fweelin.rc
+              when you start version 0.5.2.
+              
+            Fixes
+            -----
+
+            * Fixed startup segfault when running without integrated
+              FluidSynth
+
+2006-03-22  v0.5.1
+        
+            Thank you to all for good ideas and inspiration over the summer
+            and winter. Many thanks to Paul Davis for hooking me up with
+            a great Linux Audio development gig. And thanks to an anonymous
+            donor for his contribution, and to Dubphil and Paul Brossier for 
+            beta testing.
+        
+            ** FreeWheeling now requires libgnutls11-dev (gnutls-openssl)
+               instead of openssl (Thanks, Piem).
+
+            New Features
+            ------------
+        
+            * Significantly less memory usage-- more than 20 megabytes less.
+              Thanks to Drobilla for pointing out the issue with thread
+              stack size.
+
+            * New scripts (see scripts/ folder) to help you manage
+              a library of loops. You can now bath move, delete, and 
+              archive loops & scenes by date.
+               
+            * Jack transport sync-      
+        
+              - Master and slave mode
+
+                For sync to work, you must first create a pulse,
+                either by recording a loop and pressing F1, or by tapping
+                a pulse by tapping F2 twice.
+
+                Freewheeling tries to become the Jack timebase master,
+                but if another app is master, it switches to slave mode.
+
+                In master mode, Freewheeling generates beats and bar counts
+                for every repetition of the currently selected pulse.
+                In slave mode, Freewheeling receives beats and bar counts
+                and syncronizes the currently selected pulse to them.
+        
+                For both master and slave modes, you can adjust the number of 
+                bars/beats per pulse using:
+        
+                Ctrl/Shift + S - adjust timebase
+
+                You can also switch between sync to bars or sync to beats
+                using:
+
+                Alt + S - switch bars/beats sync
+          
+                Note that in master mode, FW is currently hard-wired to
+                generate 4 beats per bar. Since this is preliminary code,
+                not a big deal.
+        
+            * New user interface 
+
+              - Progress bar for saving and loading loops and scenes
+        
+              - Better organization of help page with clear sections      
+            
+              - Mouse support
+                - Click on loops triggers them. 
+                - Space + Click erases loops. 
+                - Mousewheel on loops now adjusts loop volumes--
+                  very convenient when you are mixing and playing with
+                  improvisations.
+        
+                  These can be configured.
+                  See 'loop-clicked' in .fweelin.rc.
+                        
+              - Joystick support
+                - Joystick buttons can now trigger events.
+                  For example, I have used FW with a DDR dance mat to 
+                  trigger loops. 
+        
+                  See 'joybutton' in .fweelin.rc.
+
+              - New 'engage' and 'shot' options in trigger-loop.
+                'Engage' forces a loop to ON or OFF,
+                overriding the default toggle behavior.
+                You can use it to create triggers that play short bursts,
+                rather than long loops.
+                
+                'Shot' to be implemented.
+        
+            * Stability improvements
+
+              - Better thread safety and design improvements to the real-time
+                memory manager have improved stability.
+        
+            * Significant improvements to loop/scene management and browsing
+          
+              - You can now give loops and scenes your own names
+                - New names are stored within the filename of library files
+              - Expanded browser window shows several items at once
+              - Browser now sorts so that newer loops and scenes are first
+
+            * Better handling of looppoints
+
+              - Resolved issue with clicking at the looppoint on reloaded
+                loops.
+              - Resolved sporadic clicks on syncronized loops.
+              
+            * Better handling of loading/saving loops
+
+            * Adjustable video loop delay
+            
+              - You can now adjust the performance of FreeWheeling
+                by changing the delay between video refreshes.
+                Several people asked for this feature, because
+                FW is processor-heavy on the video side.
+         
+                The video thread does run at a low priority,
+                and so it should not affect the performance of other
+                realtime audio threads. However, the system may get
+                sluggish, and if this happens, you may want to increase
+                the delay in .fweelin.rc:
+
+                <var videodelay="20"/>
+
+            Fixes
+            -----
+
+            * Fixed 'glibc double free' segfault- FW should now run
+              when compiled with GCC 4.0.
+        
+            * Adjusted the way F2 tap tempo works-
+              tapping a new tempo with F2 is now more responsive,
+              but less tolerant of mistakes 
+        
+            * Fixed 'pure virtual method called' segfault
+        
+            * Fixed segfault when browsing past end of FluidSynth patch list
+        
+            * Various fixes to reduce CPU hogging
+        
+            * Merged patches from Piem's debian package:
+              MaxVol, compile fixes for GCC 4.0, and removal of non-free
+              elements
+
+            * FW can now run without physical JACK inputs or outputs.
+              Thanks to Piem for this patch.
+
+2005-05-02  v0.5pre4
+
+            Many thanks to Sune Mai for several clever fixes,
+            to Plutek for your generous donation,
+            and to all of you for inspiration and feedback:
+            
+            Wolfgang Woehl, Mark Knecht, Shayne O'Connor, Esben Stien, 
+            Gregory Maxwell...
+
+            ** FreeWheeling now requires libvorbisfile.
+        
+            New Features
+            ------------
+
+            * Go back to previous improvisations
+              - Saving -and- loading of loops and scenes of many loops
+              - Integrated browser for scenes, loops, and FluidSynth patches
+              - Loops and scenes are sorted by time in browser
+        
+                QuickStart:
+        
+                Use F8 to save a loop, F7 to save a scene of all loops,
+                F9 to toggle auto-saving of all loops, 'b' to switch browsers
+                from FluidSynth to Loops to Scenes, 'enter' to load the
+                selected loop or scene, Shift +/- jumps to the next group
+                of scenes or loops on disk (at least an hour different in
+                time)
+
+                When loading a scene, the loops are restored to their
+                original placement. When loading a single loop,
+                it goes to the footswitch (SW) by default. You can then
+                move it to any QWERTY or MIDI key by pressing that key.
+                
+                FreeWheeling no longer saves in folders save1, save2, etc. 
+                A new library folder (by default, fw-lib/) 
+                contains all your loops, scenes, and live mixes.
+
+                A new script scripts/godelete-date, can be used to delete
+                loops and scenes from your library by date.
+        
+            * Full stereo support
+              - Individual inputs configurable stereo or mono
+              - Automatic stereo or mono loops
+              - FluidSynth in stereo or mono
+
+                QuickStart:
+
+                In ~/.fweelin.rc find:
+                <var externalaudioinputs="MMS"/>
+                This configures two mono and one stereo input.
+                FreeWheeling no longer auto-connects to system inputs and
+                outputs. You only need to configure what kinds of inputs
+                you'd like. Please note that, for now, you need to manually 
+                add displays and keyboard mappings for any inputs you add. 
+                The rest is handled automatically.
+                
+            * Multiple ALSA MIDI outputs
+              - Send live MIDI messages to different MIDI ports
+                to control different Linux apps in real-time
+
+                QuickStart:
+
+                Use "m" key to switch MIDI outputs. The default configuration,
+                <var midiouts="2"/>
+                defines two MIDI outputs. "m" toggles between the two outputs
+                and the internal FluidSynth.
+                
+            * Configurable limiter
+              - Max gain, threshold, and release rate can be changed
+              - By default, limiter no longer raises gain above 100%
+              
+              See help in ~/.fweelin.rc
+        
+            * Input level displays
+              - Peak levels for each input are now shown
+
+            * Footpedal volume adjust configuration
+
+                QuickStart:
+
+                Use MIDI controller 1 to control individual input levels.
+                Press keyboard 1-4 to select input. Then move CC1 to adjust
+                volume. Or press and hold keyboard 1-4 while moving CC1 to
+                jump to a new pedal value without adjusting volume.
+
+                In ~/.fweelin.rc, see:
+                <declare var="VAR_footpedal_ctrl_num" type="int" init="1"/>
+                <declare var="VAR_footpedal_vol_max" type="float" init="3.0"/>
+
+                You can change the CC# and max volume. 
+        
+            * Laptop keyboard configuration
+
+                QuickStart:
+                
+                If you are using FW on a laptop, you probably don't have
+                easy access to some keys. I've provided a laptop keyboard
+                configuration which remaps some keys. In the help pages, 
+                the new keys are shown in square brackets.
+                
+                To enable this configuration, edit ~/.fweelin.rc:
+                <declare var="VAR_laptopkeymode" type="char" init="0"/>
+                init="0" becomes init="1"
+
+            * Config file version checking
+              - If your config file is out of date, FreeWheeling will
+                ask whether you'd like a new one installed.
+              
+                This means you never have to manually erase ~/.fweelin.rc.
+        
+            Fixes
+            -----
+                
+            * fixed MIDI note off being misinterpreted on keyboards that
+              send note on with velocity 0
+
+            * JACK ports are no longer auto-connected
+        
+            * fixed startup hang on some systems (mutex init problem)
+
+            * fixed bug in block memory allocator Recycle() 
+              that causes a segfault during bursting of many events
+                
+            * compile fix error: 'ISO C++ forbids cast to non-reference type
+              used as l-value' in RTNew()
+            
+            * footswitch is now controller 64 by default, not 67
+
+            * several keys have been remapped- see the help for details
+        
+2005-03-11  v0.5pre3
+        
+            New Features
+            ------------
+
+            * A new way to tap downbeat and tempo (tap-pulse event)
+
+            * Switching of metronome sound for pulses (switch-metronome event)
+        
+            * FreeWheeling events can now trigger MIDI events, so you can
+              control other audio apps from within FluidSynth-- 
+              For example, you can fire off changes to your modular synths
+              from your keyboard or footpedals.
+              This eliminates the need for an extra MIDI router app, since
+              it is now built in to FreeWheeling. Your custom FreeWheeling
+              setup defines how MIDI events are generated.
+
+            * More flexible, clearer configuration syntax, with better error
+              checking and colored warning messages.
+
+            * Full input & output implementation of MIDI program change 
+              and pitch bend messages.
+
+            * An example of the new MIDI output features- 
+              A MIDI patch changer has been configured using the left/right
+              arrow keys. An on screen display shows patch number.
+              See .fweelin.rc and video tutorial: Hookups.
+        
+            * Faster, tighter memory management for events.
+        
+            * Scripts are now included that load FreeWheeling and Hexter DX7
+              softsynth, connect to LADSPA reverb and tube amp sim- see
+              scripts/README.
+
+            Fixes
+            -----
+
+            * fixed config bug that may cause "PreallocatedType: no instance
+              available" errors on startup
+            * compile fix on Mandrake GCC 3.4.x - 'parenthesized type-id' error
+                            
+2005-01-19  v0.5pre2
+
+            New Features
+            * Saving and autosaving of loops in OGG format- 
+              loops and live mixes are saved in their own folders
+            * Real-time toggling of FluidSynth
+            * Multipage help
+            * Documentation for 'z'/'x' loop octave
+
+            Fixes
+            * configure check for SDL_gfx filledPieRGBA vs filledpieRGBA
+            * configure now gives websites for dependent libraries
+            * added XInitThreads to fix 'Xlib async reply' error
+        
+2005-01-03  v0.5pre1 - first public prerelease
+
+2003 -2004  v0.1, 0.2, 0.3, 0.4 (internal)
+
+            many internal changes--
+
+            * moving from OpenGL to 2-D SDL
+            * loop visuals
+            * downbeat awareness
+            * memory manager
+            * event manager 
+            * block extended data 
+            * configuration system
+            * many bugfixes
+
+            These form the foundation of FreeWheeling as a modular looping 
+            platform.
+
+2002-06-05  FreeWheeling (then 'dogon listening device')
+
+            * initial Linux version based on Mac MAX/MSP prototype
+

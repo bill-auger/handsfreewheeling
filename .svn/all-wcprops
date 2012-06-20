@@ -1,0 +1,107 @@
+K 25
+svn:wc:ra_dav:version-url
+V 34
+/svnroot/freewheeling/!svn/ver/100
+END
+mkinstalldirs
+K 25
+svn:wc:ra_dav:version-url
+V 46
+/svnroot/freewheeling/!svn/ver/3/mkinstalldirs
+END
+configure
+K 25
+svn:wc:ra_dav:version-url
+V 43
+/svnroot/freewheeling/!svn/ver/95/configure
+END
+AUTHORS
+K 25
+svn:wc:ra_dav:version-url
+V 41
+/svnroot/freewheeling/!svn/ver/66/AUTHORS
+END
+depcomp
+K 25
+svn:wc:ra_dav:version-url
+V 40
+/svnroot/freewheeling/!svn/ver/3/depcomp
+END
+ChangeLog
+K 25
+svn:wc:ra_dav:version-url
+V 43
+/svnroot/freewheeling/!svn/ver/98/ChangeLog
+END
+THANKS
+K 25
+svn:wc:ra_dav:version-url
+V 39
+/svnroot/freewheeling/!svn/ver/3/THANKS
+END
+README
+K 25
+svn:wc:ra_dav:version-url
+V 39
+/svnroot/freewheeling/!svn/ver/3/README
+END
+ltmain.sh
+K 25
+svn:wc:ra_dav:version-url
+V 42
+/svnroot/freewheeling/!svn/ver/3/ltmain.sh
+END
+configure.ac
+K 25
+svn:wc:ra_dav:version-url
+V 46
+/svnroot/freewheeling/!svn/ver/95/configure.ac
+END
+TUNING
+K 25
+svn:wc:ra_dav:version-url
+V 39
+/svnroot/freewheeling/!svn/ver/3/TUNING
+END
+INSTALL
+K 25
+svn:wc:ra_dav:version-url
+V 41
+/svnroot/freewheeling/!svn/ver/38/INSTALL
+END
+COPYING
+K 25
+svn:wc:ra_dav:version-url
+V 40
+/svnroot/freewheeling/!svn/ver/3/COPYING
+END
+missing
+K 25
+svn:wc:ra_dav:version-url
+V 40
+/svnroot/freewheeling/!svn/ver/3/missing
+END
+Makefile.am
+K 25
+svn:wc:ra_dav:version-url
+V 44
+/svnroot/freewheeling/!svn/ver/3/Makefile.am
+END
+NEWS
+K 25
+svn:wc:ra_dav:version-url
+V 37
+/svnroot/freewheeling/!svn/ver/3/NEWS
+END
+aclocal.m4
+K 25
+svn:wc:ra_dav:version-url
+V 44
+/svnroot/freewheeling/!svn/ver/86/aclocal.m4
+END
+install-sh
+K 25
+svn:wc:ra_dav:version-url
+V 43
+/svnroot/freewheeling/!svn/ver/3/install-sh
+END
