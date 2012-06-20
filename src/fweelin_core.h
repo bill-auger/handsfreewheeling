@@ -81,7 +81,6 @@ class FluidSynthProcessor;
 // Status types for loops
 enum LoopStatus {
   T_LS_Off = 0,
-
   T_LS_Recording = 1,
   T_LS_Overdubbing = 2,
   T_LS_Playing = 3
@@ -937,7 +936,7 @@ class Fweelin : public EventProducer, public BrowserCallback {
   ~Fweelin() {};
 
 #if HANDSFREE
-static Handsfree* HandsfreeInst ; // handle to Handfree controller instance
+	static Handsfree* HandsfreeInst ;
 #endif // HANDSFREE
 
   char IsRunning() { return running; };

@@ -3202,9 +3202,7 @@ int Fweelin::go()
   cfg->StartInterfaces();
 
 #if HANDSFREE
-//Handsfree::Init() ;
-//Handsfree::Init(this) ;
-HandsfreeInst = new Handsfree(this) ;
+	HandsfreeInst = new Handsfree(this) ;
 #endif // HANDSFREE
 
   // Encourage the user!
@@ -3780,6 +3778,7 @@ int Fweelin::setup()
                           (char *) &(loopmgr->numloops));
   cfg->LinkSystemVariable("SYSTEM_num_recording_loops_in_map",T_int,
                           (char *) &(loopmgr->numrecordingloops));
+// TODO: tell JP duplicate???
   cfg->LinkSystemVariable("SYSTEM_num_recording_loops_in_map",T_int,
                           (char *) &(loopmgr->numrecordingloops));
   if (browsers[B_Patch] != 0) {

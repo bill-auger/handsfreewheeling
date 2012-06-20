@@ -12,7 +12,16 @@ fweelin_handsfree.o: fweelin_handsfree.cc /usr/include/stdio.h \
  /usr/include/i386-linux-gnu/bits/stdio_lim.h \
  /usr/include/i386-linux-gnu/bits/sys_errlist.h \
  /usr/include/i386-linux-gnu/bits/stdio.h \
- /usr/include/i386-linux-gnu/bits/stdio2.h fweelin_core.h \
+ /usr/include/i386-linux-gnu/bits/stdio2.h fweelin_handsfree.h \
+ /usr/include/math.h /usr/include/i386-linux-gnu/bits/huge_val.h \
+ /usr/include/i386-linux-gnu/bits/huge_valf.h \
+ /usr/include/i386-linux-gnu/bits/huge_vall.h \
+ /usr/include/i386-linux-gnu/bits/inf.h \
+ /usr/include/i386-linux-gnu/bits/nan.h \
+ /usr/include/i386-linux-gnu/bits/mathdef.h \
+ /usr/include/i386-linux-gnu/bits/mathcalls.h \
+ /usr/include/i386-linux-gnu/bits/mathinline.h \
+ /usr/include/i386-linux-gnu/bits/math-finite.h fweelin_core.h \
  /usr/include/gnutls/openssl.h /usr/include/gnutls/gnutls.h \
  /usr/include/i386-linux-gnu/sys/types.h /usr/include/time.h \
  /usr/include/endian.h /usr/include/i386-linux-gnu/bits/endian.h \
@@ -29,15 +38,6 @@ fweelin_handsfree.o: fweelin_handsfree.cc /usr/include/stdio.h \
  /usr/include/i386-linux-gnu/bits/waitflags.h \
  /usr/include/i386-linux-gnu/bits/waitstatus.h /usr/include/alloca.h \
  /usr/include/i386-linux-gnu/bits/stdlib.h /usr/include/ctype.h \
- /usr/include/math.h /usr/include/i386-linux-gnu/bits/huge_val.h \
- /usr/include/i386-linux-gnu/bits/huge_valf.h \
- /usr/include/i386-linux-gnu/bits/huge_vall.h \
- /usr/include/i386-linux-gnu/bits/inf.h \
- /usr/include/i386-linux-gnu/bits/nan.h \
- /usr/include/i386-linux-gnu/bits/mathdef.h \
- /usr/include/i386-linux-gnu/bits/mathcalls.h \
- /usr/include/i386-linux-gnu/bits/mathinline.h \
- /usr/include/i386-linux-gnu/bits/math-finite.h \
  /usr/include/alsa/asoundlib.h /usr/include/unistd.h \
  /usr/include/i386-linux-gnu/bits/posix_opt.h \
  /usr/include/i386-linux-gnu/bits/environments.h \
@@ -188,7 +188,7 @@ fweelin_handsfree.o: fweelin_handsfree.cc /usr/include/stdio.h \
  /usr/include/i386-linux-gnu/bits/siginfo.h \
  /usr/include/i386-linux-gnu/bits/netdb.h /usr/include/lo/lo_osc_types.h \
  /usr/include/lo/lo_errors.h /usr/include/lo/lo_lowlevel.h \
- /usr/include/lo/lo_macros.h fweelin_handsfree.h
+ /usr/include/lo/lo_macros.h
 
 /usr/include/stdio.h:
 
@@ -225,6 +225,28 @@ fweelin_handsfree.o: fweelin_handsfree.cc /usr/include/stdio.h \
 /usr/include/i386-linux-gnu/bits/stdio.h:
 
 /usr/include/i386-linux-gnu/bits/stdio2.h:
+
+fweelin_handsfree.h:
+
+/usr/include/math.h:
+
+/usr/include/i386-linux-gnu/bits/huge_val.h:
+
+/usr/include/i386-linux-gnu/bits/huge_valf.h:
+
+/usr/include/i386-linux-gnu/bits/huge_vall.h:
+
+/usr/include/i386-linux-gnu/bits/inf.h:
+
+/usr/include/i386-linux-gnu/bits/nan.h:
+
+/usr/include/i386-linux-gnu/bits/mathdef.h:
+
+/usr/include/i386-linux-gnu/bits/mathcalls.h:
+
+/usr/include/i386-linux-gnu/bits/mathinline.h:
+
+/usr/include/i386-linux-gnu/bits/math-finite.h:
 
 fweelin_core.h:
 
@@ -275,26 +297,6 @@ fweelin_amixer.h:
 /usr/include/i386-linux-gnu/bits/stdlib.h:
 
 /usr/include/ctype.h:
-
-/usr/include/math.h:
-
-/usr/include/i386-linux-gnu/bits/huge_val.h:
-
-/usr/include/i386-linux-gnu/bits/huge_valf.h:
-
-/usr/include/i386-linux-gnu/bits/huge_vall.h:
-
-/usr/include/i386-linux-gnu/bits/inf.h:
-
-/usr/include/i386-linux-gnu/bits/nan.h:
-
-/usr/include/i386-linux-gnu/bits/mathdef.h:
-
-/usr/include/i386-linux-gnu/bits/mathcalls.h:
-
-/usr/include/i386-linux-gnu/bits/mathinline.h:
-
-/usr/include/i386-linux-gnu/bits/math-finite.h:
 
 /usr/include/alsa/asoundlib.h:
 
@@ -771,5 +773,3 @@ fweelin_osc.h:
 /usr/include/lo/lo_lowlevel.h:
 
 /usr/include/lo/lo_macros.h:
-
-fweelin_handsfree.h:
