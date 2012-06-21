@@ -1,0 +1,620 @@
+<!-- handsfree.xml v0.3.2.0 for freewheeling v0.6.1 svn
+		Mr. J - 2011-05-13
+using xdotool source kludge to schedule fades - single pulse
+-->
+
+
+
+<interface>
+  <bindings>
+
+
+<!-- Variables -->
+
+	<declare var="TOGGLE_loopset" type="int" init="1"/>
+	<declare var="VAR_prev_loopset" type="int" init="1"/>
+	<declare var="VAR_next_loopset" type="int" init="1"/>
+	<declare var="TOGGLE_set1_fill" type="int" init="0"/>
+	<declare var="TOGGLE_set2_fill" type="int" init="0"/>
+	<declare var="TOGGLE_set3_fill" type="int" init="0"/>
+	<declare var="VAR_prev_fill" type="int" init="0"/>
+	<declare var="VAR_next_fill" type="int" init="0"/>
+	<declare var="VAR_this_loopid" type="int" init="0"/>
+
+	<declare var="FLAG_pause" type="int" init="0"/>
+	<declare var="FLAG_paused" type="int" init="0"/>
+	<declare var="FLAG_handsfree" type="int" init="0"/>
+
+	<declare var="VAR_keyheld_ctrl" type="int" init="0"/>
+	<declare var="VAR_keyheld_shift" type="int" init="0"/>
+	<declare var="VAR_keyheld_caps" type="int" init="0"/>
+	<declare var="VAR_loopid_pckeystart" type="int" init="0"/>
+	<declare var="VAR_pckeyfullrange" type="range" init="0>322"/>
+	<declare var="VAR_pckeyrange" type="range" init="10>38"/>
+
+<declare var="VAR_test" type="int" init="0"/>
+<declare var="VAR_test2" type="int" init="0"/>
+
+    <!-- Startup -->
+
+	<binding input="start-interface"
+		output1="set-variable" parameters1="var=FLAG_handsfree and value=1"
+		output2="video-show-layout" parameters2="interfaceid=1 and layoutid=0 and show=1 and hideothers=1"
+		output3="video-show-loop" parameters3="interfaceid=1 and layoutid=0 and loopid=0>26"
+
+		output4="video-show-display" parameters4="interfaceid=1 and displayid=4 and show=1"
+		output5="video-show-display" parameters5="interfaceid=1 and displayid=5 and show=1"
+		output6="video-show-display" parameters6="interfaceid=1 and displayid=6 and show=1"
+
+output7="fluidsynth-enable" parameters7="enable=0"
+output8="show-debug-info" parameters8="show=1"
+
+		output9="toggle-input-record" parameters9="input=1"/>
+<!--
+		output8="toggle-input-record" parameters8="input=4"
+-->
+<!-- test
+	 when does sync get turned 'on' - cant be until after a pusle exists
+	 and should maybe we stop counting when no set change?
+	 no such input event
+-->
+	<!-- binding input="midiclock" conditions="TOGGLE_sync=0 and VAR_prev_loopset=VAR_next_loopset"
+		output1="toggle-variable" parameters1="var=TOGGLE_sync and minvalue=0 and maxvalue=23"
+		output2="go-sub" parameters2="sub=4"/
+	<binding input="midiclock"
+		output1="toggle-variable" parameters1="var=TOGGLE_sync and minvalue=0 and maxvalue=23"/>
+-->
+<!--
+<binding input="key" conditions="key=f12 and keydown=1"
+output1="set-sync-type" parameters1="type=1"
+output2="set-sync-speed" parameters2="speed=1"
+output3="set-midi-sync" parameters3="midisync=1"
+output4="switch-metronome" parameters4="pulse=1 and metronome=1"/>
+-->
+<!-- end test -->
+
+<!-- Misc Functions -->
+
+	<!-- HELP: <KP0>: Toggle Loop-Set -->
+	<binding input="key" conditions="key=KP0 and keydown=1"
+		output1="toggle-variable" parameters1="var=TOGGLE_loopset and minvalue=1 and maxvalue=3"
+		output2="set-variable" parameters2="var=VAR_next_loopset and value=TOGGLE_loopset"
+		output3="go-sub" parameters3="sub=22"/>
+	<binding input="go-sub" conditions="sub=22 and TOGGLE_loopset=1"
+		output1="set-variable" parameters1="var=VAR_next_fill and value=TOGGLE_set1_fill"/>
+	<binding input="go-sub" conditions="sub=22 and TOGGLE_loopset=2"
+		output1="set-variable" parameters1="var=VAR_next_fill and value=TOGGLE_set2_fill"/>
+	<binding input="go-sub" conditions="sub=22 and TOGGLE_loopset=3"
+		output1="set-variable" parameters1="var=VAR_next_fill and value=TOGGLE_set3_fill"/>
+
+	<!-- HELP: <BACKSPACE>: Toggle Pause Mode -->
+	<binding input="key" conditions="key=backspace and keydown=1"
+		output1="toggle-variable" parameters1="var=FLAG_pause and maxvalue=1"/>
+
+    <!-- HELP: <KP-ENTER>: Toggle input 3&4 for recording -->
+	<binding input="key" conditions="key=return and keydown=1"
+			output1="toggle-input-record" parameters1="input=3"
+			output2="toggle-input-record" parameters2="input=4"/>
+
+	<!-- HELP: <LEFT-CTRL>: Fade Out -->
+	<!-- HELP: <SHIFT-LEFT-CTRL>: Un-Fade -->
+<!-- tap pulse? -->
+	<binding input="key" conditions="key=leftctrl and VAR_keyheld_shift=1 and keydown=1"
+		output1="set-variable" parameters1="var=VAR_keyheld_ctrl and value=keydown"
+		output2="set-master-out-volume" parameters2="vol=1.0"
+		output3="go-sub" parameters3="sub=4"/>
+	<binding input="key" conditions="key=leftctrl and keydown=1"
+		output1="set-variable" parameters1="var=VAR_keyheld_ctrl and value=keydown"
+		output2="slide-master-out-volume" parameters2="slide=-0.5"/>
+
+	<!-- HELP: <CTRL> + <ESC>: Exit Freewheeling -->
+	<binding input="key" conditions="VAR_keyheld_ctrl=1 and key=escape and keydown=1"
+		output="exit-freewheeling"/>
+
+
+<!-- Trigger Loops -->
+
+
+<!-- Erase Loops -->
+
+	<!-- HELP: <SHIFT> + <ESC>: Erase All -->
+    <binding input="key" conditions="key=escape and keydown=1 and VAR_keyheld_shift=1"
+		output1="set-variable" parameters1="var=VAR_prev_fill and value=0"
+		output2="set-variable" parameters2="var=TOGGLE_set1_fill and value=0"
+		output3="set-variable" parameters3="var=TOGGLE_set2_fill and value=0"
+		output4="set-variable" parameters4="var=TOGGLE_set3_fill and value=0"
+		output5="delete-pulse" parameters5="pulse=0"
+		output6="delete-pulse" parameters6="pulse=1"
+		output7="delete-pulse" parameters7="pulse=2"
+		output8="erase-all-loops"/>
+
+	<!-- HELP: <CAPS> + <ESC>: Erase Loopset -->
+<!-- this needs to check if recording loop is in this set and delete it manually
+	<binding input="key"
+			conditions="VAR_keyheld_caps=1 and key=escape and keydown=1 and
+						VAR_next_loopset=1"
+			output1="delete-pulse" parameters1="pulse=1"
+			output2="set-variable" parameters2="var=TOGGLE_set1_fill and
+value=0"/>
+	<binding input="key"
+			conditions="VAR_keyheld_caps=1 and key=escape and keydown=1 and
+						VAR_next_loopset=2"
+			output1="delete-pulse" parameters1="pulse=2"
+			output2="set-variable" parameters2="var=TOGGLE_set2_fill and
+value=0"/>
+	<binding input="key"
+			conditions="VAR_keyheld_caps=1 and key=escape and keydown=1 and
+						VAR_next_loopset=3"
+			output1="delete-pulse" parameters1="pulse=3"
+			output2="set-variable" parameters2="var=TOGGLE_set3_fill and
+value=0"/>
+-->
+    <!-- HELP: <SHIFT> + <KEY> or Right-click: Erase loop -->
+	<!-- 2do repack
+	<binding input="loop-clicked"
+			conditions="button=3 and down=1"
+			output1="erase-loop" parameters1="loopid=loopid"/>
+-->
+<!-- 2do redefine keys ??? same def proc for manual select and manual pause
+    <binding input="key"
+			conditions="key=comma and keydown=1 and
+						VAR_keyheld_shift=1"
+			output1="erase-loop" parameters1="loopid=38"/>
+	<binding input="key"
+			conditions="key=96>122 and keydown=1 and
+						VAR_keyheld_shift=1"
+			output1="erase-loop" parameters1="loopid=key"/>
+-->
+	<!-- HELP: <ESC>: Undo Youngest Loop -->
+<!-- perhaps also do something dryer (FLAG_set_fills mod 10^VAR_next_loopset) -->
+	<binding input="key" conditions="key=escape and keydown=1 and SYSTEM_num_recording_loops_in_map=1>8"
+		output1="erase-loop" parameters1="loopid=VAR_this_loopid"
+		output2="set-variable" parameters2="var=VAR_this_loopid and value=VAR_this_loopid - 1"/>
+	<binding input="key" conditions="key=escape and keydown=1 and
+			TOGGLE_loopset=VAR_prev_loopset and VAR_prev_fill=2>8"
+		output1="set-variable" parameters1="var=VAR_prev_fill and value=VAR_prev_fill - 1"
+		output2="go-sub" parameters2="sub=10"/>
+	<binding input="key" conditions="key=escape and keydown=1 and
+			TOGGLE_loopset=VAR_prev_loopset and VAR_prev_fill=0>1"
+		output1="set-variable" parameters1="var=VAR_prev_fill and value=0"
+		output2="go-sub" parameters2="sub=10"/>
+	<binding input="key" conditions="key=escape and keydown=1"
+		output1="go-sub" parameters1="sub=10"/>
+
+	<binding input="go-sub" conditions="sub=10 and TOGGLE_loopset=1 and TOGGLE_set1_fill=2>8"
+		output1="erase-loop" parameters1="loopid=10 + TOGGLE_set1_fill - 1"
+		output2="set-variable" parameters2="var=TOGGLE_set1_fill and value=TOGGLE_set1_fill - 1"/>
+	<binding input="go-sub" conditions="sub=10 and TOGGLE_loopset=2 and TOGGLE_set2_fill=2>8"
+		output1="erase-loop" parameters1="loopid=20 + TOGGLE_set2_fill - 1"
+		output2="set-variable" parameters2="var=TOGGLE_set2_fill and value=TOGGLE_set2_fill - 1"/>
+	<binding input="go-sub" conditions="sub=10 and TOGGLE_loopset=3 and TOGGLE_set3_fill=2>8"
+		output1="erase-loop" parameters1="loopid=30 + TOGGLE_set3_fill - 1"
+		output2="set-variable" parameters2="var=TOGGLE_set3_fill and value=TOGGLE_set3_fill - 1"/>
+	<binding input="go-sub" conditions="sub=10 and TOGGLE_loopset=1 and TOGGLE_set1_fill=0>1"
+		output1="delete-pulse" parameters1="pulse=0"
+		output2="set-variable" parameters2="var=TOGGLE_set1_fill and value=0"
+		output3="go-sub" parameters3="sub=11"/>
+	<binding input="go-sub" conditions="sub=10 and TOGGLE_loopset=2 and TOGGLE_set2_fill=0>1"
+		output1="delete-pulse" parameters1="pulse=1"
+		output2="set-variable" parameters2="var=TOGGLE_set2_fill and value=0"
+		output3="go-sub" parameters3="sub=11"/>
+	<binding input="go-sub" conditions="sub=10 and TOGGLE_loopset=3 and TOGGLE_set3_fill=0>1"
+		output1="delete-pulse" parameters1="pulse=2"
+		output2="set-variable" parameters2="var=TOGGLE_set3_fill and value=0"
+		output3="go-sub" parameters3="sub=11"/>
+
+<!-- this may also work if pulses= 1, 10, 100
+			output4="delete-pulse"
+			parameters4="pulse=TOGGLE_set1_fill * 10 ^ VAR_next_loopset"/>
+
+
+output2="set-variable" parameters2="var=VAR_this_loopid and value=VAR_this_loopid - 1"/>
+<binding input="key" conditions="key=escape and keydown=1 and TOGGLE_loopset=1"
+-->
+<!-- maybe delete the youngest in VAR_next_loopset if not the current set
+		while recording -->
+
+	<binding input="key" conditions="key=escape and keydown=1"
+		output1="set-variable" parameters1="var=VAR_this_loopid and value=9999"/>
+
+
+	<!-- Select/De-select Paused Loops -->
+	<!-- HELP: <KEY> or Click: Select/De-select Paused Loops -->
+	<binding input="loop-clicked" conditions="button=1 and down=1"
+			output1="trigger-loop" parameters1="loopid=loopid"/>
+<!--
+	<binding input="loop-clicked"
+			conditions="button=1 and down=1 and
+						FLAG_paused=1"
+			output1="toggle-select-loop"
+			parameters1="setid=0 and loopid=loopid"/>
+	<binding input="key"
+			conditions="key=comma and keydown=1 and
+						FLAG_paused=1"
+			output1="toggle-select-loop"
+			parameters1="setid=0 and loopid=96"/>
+	<binding input="key"
+			conditions="key=96>122 and keydown=1 and
+						FLAG_paused=1"
+			output1="toggle-select-loop"
+			parameters1="setid=0 and loopid=key"/>
+-->
+
+
+<!-- Overrides -->
+
+	<!-- HELP: <CTRL> + <,>/<.> <KP0>/<KP.>: Transpose MIDI output -->
+	<binding input="key" conditions="key=comma and keydown=1 and VAR_keyheld_ctrl=1"
+		output1="adjust-midi-transpose" parameters1="adjust=-12"/>
+	<binding input="key" conditions="key=period and keydown=1 and VAR_keyheld_ctrl=1"
+		output1="adjust-midi-transpose" parameters1="adjust=12"/>
+	<binding input="key" conditions="key=t and keydown=1"
+		output1="trigger-loop" parameters1="loopid=116 and vol=1.0"/>
+	<binding input="key" conditions="key=u and keydown=1"
+		output1="trigger-loop" parameters1="loopid=117 and vol=1.0"/>
+	<binding input="key" conditions="key=z and keydown=1"
+		output1="trigger-loop" parameters1="loopid=122 and vol=1.0"/>
+	<binding input="key" conditions="key=x and keydown=1"
+		output1="trigger-loop" parameters1="loopid=120 and vol=1.0"/>
+	<binding input="key" conditions="key=b and keydown=1"
+		output1="trigger-loop" parameters1="loopid=98 and vol=1.0"/>
+	<binding input="key" conditions="key=comma and keydown=1"
+		output1="trigger-loop" parameters1="loopid=96 and vol=1.0"/>
+<!-- was
+	<binding input="key"
+			conditions="key=leftctrl"
+			output1="set-variable"
+			parameters1="var=VAR_keyheld_ctrl and value=keydown"
+			output2="set-variable"
+			parameters2="var=FLAG_handsfree and value=-1 * keydown + 1"
+			output3="video-show-display"
+			parameters3="interfaceid=1000 and displayid=2000 and
+						show=keydown"/>
+-->
+
+	<binding input="key" conditions="key=leftctrl"
+		output1="set-variable" parameters1="var=VAR_keyheld_ctrl and value=keydown"/>
+	<binding input="key" conditions="key=rightctrl"
+		output1="set-variable" parameters1="var=VAR_keyheld_ctrl and value=keydown"/>
+	<binding input="key" conditions="key=leftshift"
+		output1="set-variable" parameters1="var=VAR_keyheld_shift and value=keydown"/>
+	<binding input="key" conditions="key=rightshift"
+		output1="set-variable" parameters1="var=VAR_keyheld_shift and value=keydown"/>
+	<binding input="key" conditions="key=capslock"
+		output1="set-variable" parameters1="var=VAR_keyheld_caps and value=keydown"/>
+
+
+
+
+  </bindings>
+
+
+  <graphics>
+
+
+<!-- Loops -->
+
+	<layout	id="0" name="Phantom PC Keyboard" scale="1.0,1.6"
+			pos="0.00,0.00" label="0" elabel="1" show="0">
+		<element id="10" name="Q" base="0.0,0.0" looppos="0.05,0.05"
+				loopsize="0.125" namepos="0.01,0.00"></element>
+		<element id="11" name="W" base="0.1,0.0" looppos="0.05,0.05"
+				loopsize="0.125" namepos="0.01,0.00"></element>
+		<element id="12" name="E" base="0.2,0.0" looppos="0.05,0.05"
+				loopsize="0.125" namepos="0.01,0.00"></element>
+		<element id="13" name="R" base="0.3,0.0" looppos="0.05,0.05"
+				loopsize="0.125" namepos="0.01,0.00"></element>
+		<element id="14" name="A" base="0.05,0.1" looppos="0.05,0.05"
+				loopsize="0.125" namepos="0.01,0.00"></element>
+		<element id="15" name="S" base="0.15,0.1" looppos="0.05,0.05"
+				loopsize="0.125" namepos="0.01,0.00"></element>
+		<element id="16" name="D" base="0.25,0.1" looppos="0.05,0.05"
+				loopsize="0.125" namepos="0.01,0.00"></element>
+		<element id="17" name="Z" base="0.1,0.2" looppos="0.05,0.05"
+				loopsize="0.125" namepos="0.01,0.00"></element>
+		<element id="18" name="X" base="0.2,0.2" looppos="0.05,0.05"
+				loopsize="0.125" namepos="0.01,0.00"></element>
+
+		<element id="20" name="T" base="0.4,0.0" looppos="0.05,0.05"
+				loopsize="0.125" namepos="0.01,0.00"></element>
+		<element id="21" name="Y" base="0.5,0.0" looppos="0.05,0.05"
+				loopsize="0.125" namepos="0.01,0.00"></element>
+		<element id="22" name="F" base="0.35,0.1" looppos="0.05,0.05"
+				loopsize="0.125" namepos="0.01,0.00"></element>
+		<element id="23" name="G" base="0.45,0.1" looppos="0.05,0.05"
+				loopsize="0.125" namepos="0.01,0.00"></element>
+		<element id="24" name="H" base="0.55,0.1" looppos="0.05,0.05"
+				loopsize="0.125" namepos="0.01,0.00"></element>
+		<element id="25" name="C" base="0.3,0.2" looppos="0.05,0.05"
+				loopsize="0.125" namepos="0.01,0.00"></element>
+		<element id="26" name="V" base="0.4,0.2" looppos="0.05,0.05"
+				loopsize="0.125" namepos="0.01,0.00"></element>
+		<element id="27" name="B" base="0.5,0.2" looppos="0.05,0.05"
+				loopsize="0.125" namepos="0.01,0.00"></element>
+		<element id="28" name="N" base="0.6,0.2" looppos="0.05,0.05"
+				loopsize="0.125" namepos="0.01,0.00"></element>
+
+		<element id="30" name="U" base="0.6,0.0" looppos="0.05,0.05"
+				loopsize="0.125" namepos="0.01,0.00"></element>
+		<element id="31" name="I" base="0.7,0.0" looppos="0.05,0.05"
+				loopsize="0.125" namepos="0.01,0.00"></element>
+		<element id="32" name="O" base="0.8,0.0" looppos="0.05,0.05"
+				loopsize="0.125" namepos="0.01,0.00"></element>
+		<element id="33" name="P" base="0.9,0.0" looppos="0.05,0.05"
+				loopsize="0.125" namepos="0.01,0.00"></element>
+		<element id="34" name="J" base="0.65,0.1" looppos="0.05,0.05"
+				loopsize="0.125" namepos="0.01,0.00"></element>
+		<element id="35" name="K" base="0.75,0.1" looppos="0.05,0.05"
+				loopsize="0.125" namepos="0.01,0.00"></element>
+		<element id="36" name="L" base="0.85,0.1" looppos="0.05,0.05"
+				loopsize="0.125" namepos="0.01,0.00"></element>
+		<element id="37" name="M" base="0.7,0.2" looppos="0.05,0.05"
+				loopsize="0.125" namepos="0.01,0.00"></element>
+		<element id="38" name="," base="0.8,0.2" looppos="0.05,0.05"
+				loopsize="0.125" namepos="0.01,0.00"></element>
+	</layout>
+
+<!-- seperators -->
+
+	<display 	id="1" var="1 / TOGGLE_loopset"
+			title="" pos="0.4,0.15" type="bar" font="main"
+			orientation="vertical" barscale="0.15" thickness="0.001"/>
+	<display 	id="1" var="1 / TOGGLE_loopset"
+			title="" pos="0.6,0.15" type="bar" font="main"
+			orientation="vertical" barscale="0.15" thickness="0.001"/>
+	<display 	id="1" var="1 / TOGGLE_loopset"
+			title="" pos="0.35,0.3" type="bar" font="main"
+			orientation="vertical" barscale="0.15" thickness="0.001"/>
+	<display 	id="1" var="1 / TOGGLE_loopset"
+			title="" pos="0.65,0.3" type="bar" font="main"
+			orientation="vertical" barscale="0.15" thickness="0.001"/>
+	<display 	id="1" var="1 / TOGGLE_loopset"
+			title="" pos="0.3,0.45" type="bar" font="main"
+			orientation="vertical" barscale="0.15" thickness="0.001"/>
+	<display 	id="1" var="1 / TOGGLE_loopset"
+			title="" pos="0.7,0.45" type="bar" font="main"
+			orientation="vertical" barscale="0.15" thickness="0.001"/>
+
+	<display 	id="1" var="1 / TOGGLE_loopset"
+			title="" pos="0.35,0.15" type="bar" font="main"
+			orientation="horizontal" barscale="0.05" thickness="0.001"/>
+	<display 	id="1" var="1 / TOGGLE_loopset"
+			title="" pos="0.6,0.15" type="bar" font="main"
+			orientation="horizontal" barscale="0.05" thickness="0.001"/>
+	<display 	id="1" var="1 / TOGGLE_loopset"
+			title="" pos="0.3,0.3" type="bar" font="main"
+			orientation="horizontal" barscale="0.05" thickness="0.001"/>
+	<display 	id="1" var="1 / TOGGLE_loopset"
+			title="" pos="0.65,0.3" type="bar" font="main"
+			orientation="horizontal" barscale="0.05" thickness="0.001"/>
+	<display 	id="1" var="1 / TOGGLE_loopset"
+			title="" pos="0.25,0.45" type="bar" font="main"
+			orientation="horizontal" barscale="0.05" thickness="0.001"/>
+	<display 	id="1" var="1 / TOGGLE_loopset"
+			title="" pos="0.7,0.45" type="bar" font="main"
+			orientation="horizontal" barscale="0.05" thickness="0.001"/>
+	
+<!-- Footswitches -->
+
+	<layout 	id="1" name="FootswitchL" scale="1.0,1.6" pos="0.18,0.515"
+     		label="0" elabel="1" namepos="0.02,0.02" show="0">
+		<element id="1" name="" base="0.0,0.0" looppos="0.05,0.05"
+				loopsize="0.125" namepos="0.02,-0.024"></element>
+	</layout>
+	<layout 	id="2" name="FootswitchC" scale="1.0,1.6" pos="0.45,0.5"
+     		label="0" elabel="1" namepos="0.02,0.02" show="0">
+		<element id="2" name="CHORUS" base="0.0,0.0" looppos="0.05,0.05"
+				loopsize="0.125" namepos="0.02,-0.024"></element>
+	</layout>
+	<layout 	id="3" name="FootswitchR" scale="1.0,1.6" pos="0.7,0.5"
+			label="0" elabel="1" namepos="0.02,0.02" show="0">
+		<element id="3" name="BRIDGE" base="0.0,0.0" looppos="0.05,0.05"
+				loopsize="0.125" namepos="0.02,-0.024"></element>
+	</layout>
+	<display 	id="1" var="1 / TOGGLE_loopset" pos="0.2,0.5"
+			title="VERSE " type="switch" font="main"/>
+	<display 	id="2" var="4 - TOGGLE_loopset * TOGGLE_loopset - 3" pos="0.45,0.5"
+			title="CHORUS" type="switch" font="main"/>
+	<display 	id="3" var="-3 / TOGGLE_loopset + 4 / 3" pos="0.7,0.5"
+			title="BRIDGE " type="switch" font="main"/>
+
+<!--
+	<layout 	id="1" name="FootswitchL" scale="1.0,1.6" pos="0.2,0.58"
+     		label="0" elabel="1" namepos="0.02,0.02" show="0">
+		<element id="10" name="Q" base="0.0,0.0" looppos="0.05,0.05"
+				loopsize="0.15" namepos="0.0,-0.024"></element>
+		<element id="11" name="W" base="0.0,0.0" looppos="0.05,0.05"
+				loopsize="0.15" namepos="0.0,-0.024"></element>
+		<element id="12" name="E" base="0.0,0.0" looppos="0.05,0.05"
+				loopsize="0.15" namepos="0.0,-0.024"></element>
+		<element id="13" name="A" base="0.0,0.0" looppos="0.05,0.05"
+				loopsize="0.15" namepos="0.0,-0.024"></element>
+		<element id="14" name="S" base="0.0,0.0" looppos="0.05,0.05"
+				loopsize="0.15" namepos="0.0,-0.024"></element>
+		<element id="15" name="D" base="0.0,0.0" looppos="0.05,0.05"
+				loopsize="0.15" namepos="0.0,-0.024"></element>
+		<element id="16" name="Z" base="0.0,0.0" looppos="0.05,0.05"
+				loopsize="0.15" namepos="0.0,-0.024"></element>
+		<element id="17" name="X" base="0.0,0.0" looppos="0.05,0.05"
+				loopsize="0.15" namepos="0.0,-0.024"></element>
+		<element id="18" name="C" base="0.0,0.0" looppos="0.05,0.05"
+				loopsize="0.15" namepos="0.0,-0.024"></element>
+	</layout>
+	<layout 	id="2" name="FootswitchC" scale="1.0,1.6" pos="0.45,0.58"
+     		label="0" elabel="1" namepos="0.02,0.02" show="0">
+		<element id="20" name="R" base="0.0,0.0" looppos="0.05,0.05"
+				loopsize="0.15" namepos="0.02,-0.024"></element>
+		<element id="21" name="T" base="0.0,0.0" looppos="0.05,0.05"
+				loopsize="0.15" namepos="0.02,-0.024"></element>
+		<element id="22" name="Y" base="0.0,0.0" looppos="0.05,0.05"
+				loopsize="0.15" namepos="0.02,-0.024"></element>
+		<element id="23" name="U" base="0.0,0.0" looppos="0.05,0.05"
+				loopsize="0.15" namepos="0.02,-0.024"></element>
+		<element id="24" name="F" base="0.0,0.0" looppos="0.05,0.05"
+				loopsize="0.15" namepos="0.02,-0.024"></element>
+		<element id="25" name="G" base="0.0,0.0" looppos="0.05,0.05"
+				loopsize="0.15" namepos="0.02,-0.024"></element>
+		<element id="26" name="H" base="0.0,0.0" looppos="0.05,0.05"
+				loopsize="0.15" namepos="0.02,-0.024"></element>
+		<element id="27" name="V" base="0.0,0.0" looppos="0.05,0.05"
+				loopsize="0.15" namepos="0.02,-0.024"></element>
+		<element id="28" name="B" base="0.0,0.0" looppos="0.05,0.05"
+				loopsize="0.15" namepos="0.02,-0.024"></element>
+	</layout>
+	<layout 	id="3" name="FootswitchR" scale="1.0,1.6" pos="0.7,0.58"
+			label="0" elabel="1" namepos="0.02,0.02" show="0">
+		<element id="30" name="I" base="0.0,0.0" looppos="0.05,0.05"
+				loopsize="0.15" namepos="0.02,-0.024"></element>
+		<element id="31" name="O" base="0.0,0.0" looppos="0.05,0.05"
+				loopsize="0.15" namepos="0.02,-0.024"></element>
+		<element id="32" name="P" base="0.0,0.0" looppos="0.05,0.05"
+				loopsize="0.15" namepos="0.02,-0.024"></element>
+		<element id="33" name="J" base="0.0,0.0" looppos="0.05,0.05"
+				loopsize="0.15" namepos="0.02,-0.024"></element>
+		<element id="34" name="K" base="0.0,0.0" looppos="0.05,0.05"
+				loopsize="0.15" namepos="0.02,-0.024"></element>
+		<element id="35" name="L" base="0.0,0.0" looppos="0.05,0.05"
+				loopsize="0.15" namepos="0.02,-0.024"></element>
+		<element id="36" name="N" base="0.0,0.0" looppos="0.05,0.05"
+				loopsize="0.15" namepos="0.02,-0.024"></element>
+		<element id="37" name="M" base="0.0,0.0" looppos="0.05,0.05"
+				loopsize="0.15" namepos="0.02,-0.024"></element>
+		<element id="38" name="," base="0.0,0.0" looppos="0.05,0.05"
+				loopsize="0.15" namepos="0.02,-0.024"></element>
+	</layout>	
+-->
+
+	<display 	id="11" var="SYSTEM_num_recording_loops_in_map" flash="1"
+			type="circle-switch" pos="0.25,0.658" size1="0.01" size0="0.0"/>
+	<display 	id="22" var="SYSTEM_num_recording_loops_in_map" flash="1"
+			 type="circle-switch" pos="0.4995,0.658" size1="0.01" size0="0.0"/>
+	<display 	id="33" var="SYSTEM_num_recording_loops_in_map" flash="1"
+			 type="circle-switch" pos="0.7495,0.658" size1="0.01" size0="0.0"/>
+
+
+<!-- Toggles -->
+
+	<display 	id="4" var="FLAG_pause" type="switch"
+			title="  PAUSE" font="main" pos="0.905,0.76"/>
+	<display 	id="5" var="FLAG_paused" type="switch"
+			title=" PAUSED" font="main" pos="0.91,0.80"/>
+	<display 	id="6" var="FLAG_handsfree" type="switch"
+			title="HANDSFREE" font="main" pos="0.905,0.84"/>
+
+<!-- Meters -->
+
+    <display var="SYSTEM_master_in_volume" type="bar" font="main"
+     title="-> 1  2  L R->   " pos="0.335,0.96"
+     orientation="vertical" barscale="0.201" thickness="0.085"/>
+    <display var="SYSTEM_master_in_volume" type="bar" font="main"
+     title="  IN" pos="0.4,0.96"
+     orientation="vertical" barscale="0.2" thickness="0.025"/>
+
+    <display var="SYSTEM_in_1_volume" type="bar-switch"
+     switchvar="SYSTEM_in_1_record" title="1"
+     orientation="vertical" pos="0.28,0.96" barscale="0.2" thickness="0.025"/>
+    <display var="SYSTEM_in_2_volume" type="bar-switch"
+     switchvar="SYSTEM_in_2_record" title="2"
+     orientation="vertical" pos="0.31,0.96" barscale="0.2" thickness="0.025"/>
+    <display var="SYSTEM_in_3_volume" type="bar-switch"
+     switchvar="SYSTEM_in_3_record" title="L-S"
+     orientation="vertical" pos="0.34,0.96" barscale="0.2" thickness="0.025"/>
+    <display var="SYSTEM_in_4_volume" type="bar-switch"
+     switchvar="SYSTEM_in_4_record" title="T-R"
+     orientation="vertical" pos="0.37,0.96" barscale="0.2" thickness="0.025"/>
+
+    <display var="SYSTEM_in_1_peak" type="bar-switch"
+     switchvar="SYSTEM_in_1_record"
+     orientation="vertical" pos="0.28,0.96" barscale="0.2" thickness="0.015"
+     color="2" calibrate="1.0"/>
+    <display var="SYSTEM_in_2_peak" type="bar-switch"
+     switchvar="SYSTEM_in_2_record"
+     orientation="vertical" pos="0.31,0.96" barscale="0.2" thickness="0.015"
+     color="2" calibrate="1.0"/>
+    <display var="SYSTEM_in_3_peak" type="bar-switch"
+     switchvar="SYSTEM_in_3_record"
+     orientation="vertical" pos="0.34,0.96" barscale="0.2" thickness="0.015"
+     color="2" calibrate="1.0"/>
+    <display var="SYSTEM_in_4_peak" type="bar-switch"
+     switchvar="SYSTEM_in_4_record"
+     orientation="vertical" pos="0.37,0.96" barscale="0.2" thickness="0.015"
+     color="5" calibrate="1.0"/>
+
+    <display var="SYSTEM_cur_limiter_gain" type="bar" font="main"
+     title="LIMIT" pos="0.5,0.96"
+     orientation="vertical" barscale="0.2" thickness="0.03"/>
+
+    <display var="SYSTEM_master_out_volume" type="bar" font="main"
+     title="OUT->" pos="0.6,0.96"
+     orientation="vertical" barscale="0.2" thickness="0.03"/>
+
+    <display var="SYSTEM_audio_cpu_load/100" type="bar" font="main"
+     title="%CPU" pos="0.7,0.96"
+     orientation="vertical" barscale="0.2" thickness="0.03"/>
+
+	<display var="TOGGLE_set1_fill" type="text" font="main"
+			 title="" pos="0.26,0.53"/>
+	<display var="TOGGLE_set2_fill" type="text" font="main"
+			 title="" pos="0.51,0.53"/>
+	<display var="TOGGLE_set3_fill" type="text" font="main"
+			title="" pos="0.76,0.53"/>
+
+
+<!-- debug -->
+
+<!--
+	<display 	id="2" var="CONST_footswitch" type="text"
+			title="s/w id" font="main" pos="0.8,0.78" />
+-->
+	<display var="VAR_prev_loopset" type="text" font="main"
+		title="PREVSET " pos="0.0,0.56"/>
+	<display var="VAR_prev_fill" type="text" font="main"
+		title="PREVFILL " pos="0.0,0.60"/>
+	<display var="VAR_next_loopset" type="text" font="main"
+		title="NEXTSET " pos="0.0,0.64"/>
+	<display var="VAR_next_fill" type="text" font="main"
+		title="NEXTFILL " pos="0.0,0.68"/>
+	<display var="VAR_this_loopid" type="text" font="main"
+		title="THISLOOP " pos="0.0,0.72"/>
+	<display var="SYSTEM_num_loops_in_map" type="text" font="main"
+		title="NUMLOOPS" pos="0.0,0.80"/>
+	<display var="SYSTEM_num_recording_loops_in_map" type="text" font="main"
+		title="RECLOOPS" pos="0.0,0.84"/>
+
+<!--
+	<display var="FLAG_set_change" type="text" font="main"
+		title="CHANGE" pos="0.0,0.76"/>
+	<display var="TOGGLE_sync" type="text" font="main"
+		title="SYNC" pos="0.0,0.88"/>
+
+	<display var="FLAG_mark" type="text" font="main"
+		title="MARK " pos="0.75,0.68"/>
+	<display var="FLAG_undo" type="text" font="main"
+		title="UNDO " pos="0.75,0.70"/>
+	<display var="FLAG_clear" type="text" font="main"
+		title="CLEAR " pos="0.75,0.72"/>
+
+	<display var="FLAG_pulse" type="text" font="main"
+		title="PULSE " pos="0.75,0.84"/>
+	<display var="VAR_undone" type="text" font="main"
+		title="UNDONE " pos="0.75,0.86"/>
+-->
+<!--
+<display var="SYSTEM_sync_active" type="text" font="main"
+title="SYSTEM_sync_active" pos="0.0,0.88"/>
+<display var="SYSTEM_sync_transmit" type="text" font="main"
+title="SYSTEM_sync_transmit" pos="0.0,0.92"/>
+<display var="SYSTEM_midisync_transmit" type="text" font="main"
+title="SYSTEM_midisync_transmit" pos="0.0,0.96"/>
+	<display var="VAR_test" type="text" font="main"
+		title="TEST" pos="0.0,0.88"/>
+	<display var="VAR_test2" type="text" font="main"
+		title="TEST2" pos="0.0,0.92"/>
+-->
+<!-- debug end -->
+
+
+
+
+  </graphics>
+</interface>

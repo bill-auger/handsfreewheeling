@@ -12,7 +12,11 @@ fweelin_datatypes.h:217:56: error: ‘fabsf’ was not declared in this scope
 #include "fweelin_event.h"
 
 #define HANDSFREE 1
+#define N_LOOPSETS 3
 #define MAX_LOOPSET_FILL 9
+// keysyms listed in /usr/include/SDL/SDL_keysym.h (SDLK_a == 97)
+#define TRIGGER_LOOP_KEY SDLK_SPACE
+#define TOGGLE_LOOPSET_KEY SDLK_KP0
 
 
 struct Loopset
@@ -26,7 +30,8 @@ class Handsfree : public EventProducer , public EventListener
 {
 	public:
 		// called from fweelin_core.cc just before entering SDL loop
-		Handsfree(Fweelin* aFweelin) : app(aFweelin)
+		Handsfree(Fweelin* aFweelin) :
+				app(aFweelin) , lastKeypress(0.0) , nextLoopsetIdx(0) , prevLoopsetIdx(0)
 		{
 			for (int i = 0 ; i < MAX_PULSES ; ++i)
 			{
@@ -47,20 +52,31 @@ class Handsfree : public EventProducer , public EventListener
 
 	private:
 		Fweelin* app ; // handle to main app instance (for event listener setup/teardown)
-		bool keyMutex ; // workaround for duplicate key events (TODO: is this a bug?)
+		double lastKeypress ; // workaround for duplicate key events (TODO: is this a bug?)
+//		bool keyMutex ; // workaround for duplicate key events (TODO: is this a bug?)
 		Loopset* Loopsets[MAX_PULSES] ; // array of Loopset data structs
+		int nextLoopsetIdx ; // idx into Loopset array - set by key event
+		int prevLoopsetIdx ; // cache for transitions
 
 		// event listeners
 		void addListeners() ;
 		void removeListeners() ;
 
 		// helpers
+		double getTimestamp() ; // workaround for duplicate key events (TODO: is this a bug?)
+//		bool getKeyMutexState() ;
+//		void setKeyMutexState(bool isOn) ;
+		bool isTimestampStale() ;
+		void setTimestamp() ;
 		int getPulseIdx() ;
 		int getLoopStatus(int loopIdx) ;
 		void triggerLoop(int loopIdx) ;
+		void selectPulse(int pulseIdx) ;
 
 		// handsfree functions
 		void handleKeypress(Event* ev) ;
+		void handleToggleLoopsetKey() ;
+		void handleTriggerLoopKey() ;
 
 // DEBUG:
 void dbgLoopsStatus(Loopset* loopset) ;

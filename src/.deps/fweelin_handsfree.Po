@@ -12,7 +12,13 @@ fweelin_handsfree.o: fweelin_handsfree.cc /usr/include/stdio.h \
  /usr/include/i386-linux-gnu/bits/stdio_lim.h \
  /usr/include/i386-linux-gnu/bits/sys_errlist.h \
  /usr/include/i386-linux-gnu/bits/stdio.h \
- /usr/include/i386-linux-gnu/bits/stdio2.h fweelin_handsfree.h \
+ /usr/include/i386-linux-gnu/bits/stdio2.h \
+ /usr/include/i386-linux-gnu/sys/time.h /usr/include/time.h \
+ /usr/include/i386-linux-gnu/bits/time.h \
+ /usr/include/i386-linux-gnu/sys/select.h \
+ /usr/include/i386-linux-gnu/bits/select.h \
+ /usr/include/i386-linux-gnu/bits/sigset.h \
+ /usr/include/i386-linux-gnu/bits/select2.h fweelin_handsfree.h \
  /usr/include/math.h /usr/include/i386-linux-gnu/bits/huge_val.h \
  /usr/include/i386-linux-gnu/bits/huge_valf.h \
  /usr/include/i386-linux-gnu/bits/huge_vall.h \
@@ -23,14 +29,9 @@ fweelin_handsfree.o: fweelin_handsfree.cc /usr/include/stdio.h \
  /usr/include/i386-linux-gnu/bits/mathinline.h \
  /usr/include/i386-linux-gnu/bits/math-finite.h fweelin_core.h \
  /usr/include/gnutls/openssl.h /usr/include/gnutls/gnutls.h \
- /usr/include/i386-linux-gnu/sys/types.h /usr/include/time.h \
- /usr/include/endian.h /usr/include/i386-linux-gnu/bits/endian.h \
+ /usr/include/i386-linux-gnu/sys/types.h /usr/include/endian.h \
+ /usr/include/i386-linux-gnu/bits/endian.h \
  /usr/include/i386-linux-gnu/bits/byteswap.h \
- /usr/include/i386-linux-gnu/sys/select.h \
- /usr/include/i386-linux-gnu/bits/select.h \
- /usr/include/i386-linux-gnu/bits/sigset.h \
- /usr/include/i386-linux-gnu/bits/time.h \
- /usr/include/i386-linux-gnu/bits/select2.h \
  /usr/include/i386-linux-gnu/sys/sysmacros.h \
  /usr/include/i386-linux-gnu/bits/pthreadtypes.h \
  /usr/include/i386-linux-gnu/bits/timex.h /usr/include/xlocale.h \
@@ -226,6 +227,20 @@ fweelin_handsfree.o: fweelin_handsfree.cc /usr/include/stdio.h \
 
 /usr/include/i386-linux-gnu/bits/stdio2.h:
 
+/usr/include/i386-linux-gnu/sys/time.h:
+
+/usr/include/time.h:
+
+/usr/include/i386-linux-gnu/bits/time.h:
+
+/usr/include/i386-linux-gnu/sys/select.h:
+
+/usr/include/i386-linux-gnu/bits/select.h:
+
+/usr/include/i386-linux-gnu/bits/sigset.h:
+
+/usr/include/i386-linux-gnu/bits/select2.h:
+
 fweelin_handsfree.h:
 
 /usr/include/math.h:
@@ -256,23 +271,11 @@ fweelin_core.h:
 
 /usr/include/i386-linux-gnu/sys/types.h:
 
-/usr/include/time.h:
-
 /usr/include/endian.h:
 
 /usr/include/i386-linux-gnu/bits/endian.h:
 
 /usr/include/i386-linux-gnu/bits/byteswap.h:
-
-/usr/include/i386-linux-gnu/sys/select.h:
-
-/usr/include/i386-linux-gnu/bits/select.h:
-
-/usr/include/i386-linux-gnu/bits/sigset.h:
-
-/usr/include/i386-linux-gnu/bits/time.h:
-
-/usr/include/i386-linux-gnu/bits/select2.h:
 
 /usr/include/i386-linux-gnu/sys/sysmacros.h:
 
