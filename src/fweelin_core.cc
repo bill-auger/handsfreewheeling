@@ -50,12 +50,8 @@
 #include "fweelin_paramset.h"
 #include "fweelin_looplibrary.h"
 
-#include "fweelin_handsfree.h"
 
-
-#if HANDSFREE
-Handsfree* Fweelin::HandsfreeInst = 0 ;
-#endif // HANDSFREE
+Handsfree* Fweelin::HandsfreeInst = 0 ; // HANDSFREE
 
 const float Loop::MIN_VOL = 0.01;
 PreallocatedType *Loop::loop_pretype = 0;
@@ -1659,7 +1655,7 @@ Pulse *LoopManager::CreatePulse(nframes_t len) {
     for (i = 0; i < MAX_PULSES && pulses[i] != 0; i++);
     if (i < MAX_PULSES) {
       app->getRP()->AddChild(pulses[i] = 
-                             new Pulse(app,len,0),
+                             new Pulse(app , len , 0 , i) ,
                              ProcessorItem::TYPE_HIPRIORITY);
       StripePulseOn(pulses[i]);
       curpulseindex = i;
@@ -1697,7 +1693,7 @@ void LoopManager::CreatePulse(int index, int pulseindex, int sub) {
           GetRecordedLength() % len;
       
       app->getRP()->AddChild(cur->pulse = pulses[pulseindex] = 
-                             new Pulse(app,len,startpos),
+                             new Pulse(app , len , startpos , pulseindex) ,
                              ProcessorItem::TYPE_HIPRIORITY);
       StripePulseOn(cur->pulse);
       curpulseindex = pulseindex;
@@ -1732,7 +1728,7 @@ void LoopManager::TapPulse(int pulseindex, char newlen) {
     if (cur == 0) {
       if (newlen) {
         // New pulse- tap now!- set zero length for now
-        cur = pulses[pulseindex] = new Pulse(app,0,0);
+        cur = pulses[pulseindex] = new Pulse(app , 0 , 0 , pulseindex) ;
         cur->stopped = 1;
         cur->prevtap = app->getRP()->GetSampleCnt();
         //cur->SwitchMetronome(1);
@@ -3201,9 +3197,7 @@ int Fweelin::go()
   // Broadcast events for starting all interfaces!
   cfg->StartInterfaces();
 
-#if HANDSFREE
-	HandsfreeInst = new Handsfree(this) ;
-#endif // HANDSFREE
+	HandsfreeInst = new Handsfree(this) ; // HANDSFREE
 
   // Encourage the user!
   printf("\n-- ** OKIE DOKIE, KIDDO! ** --\n");

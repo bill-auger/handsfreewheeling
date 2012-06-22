@@ -1,0 +1,7 @@
+#!/bin/bash
+
+echo $re"launching freewheeling"
+/home/me/src/freewheeling/src/fweelin &
+sleep 1 ; /home/me/bin/memuse | grep fweelin | grep -v "grep" 1> /dev/null
+if (($?)) ; then ./fwee ; fi
+

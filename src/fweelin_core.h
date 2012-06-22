@@ -45,8 +45,7 @@
 #include "fweelin_browser.h"
 #include "fweelin_fluidsynth.h"
 #include "fweelin_osc.h"
-
-#include "fweelin_handsfree.h"
+#include "fweelin_handsfree.h" // HANDSFREE
 
 
 class SDLIO;
@@ -935,9 +934,7 @@ class Fweelin : public EventProducer, public BrowserCallback {
     sync_type(0), sync_speed(1), running(0) {};
   ~Fweelin() {};
 
-#if HANDSFREE
-	static Handsfree* HandsfreeInst ;
-#endif // HANDSFREE
+	static Handsfree* HandsfreeInst ; // HANDSFREE
 
   char IsRunning() { return running; };
 

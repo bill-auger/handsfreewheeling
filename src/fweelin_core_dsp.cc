@@ -37,8 +37,6 @@
 #include "fweelin_config.h"
 #include "fweelin_core_dsp.h"
 
-#include "fweelin_handsfree.h"
-
 
 const float Processor::MIN_VOL = 0.01;
 const nframes_t Processor:: DEFAULT_SMOOTH_LENGTH = 64;
@@ -385,13 +383,13 @@ void Processor::fadepreandcurrent(AudioBuffers *ab) {
   }
 }
 
-Pulse::Pulse(Fweelin *app, nframes_t len, nframes_t startpos) : 
+Pulse::Pulse(Fweelin *app , nframes_t len , nframes_t startpos , int pulseIdx) : 
   Processor(app), len(len), curpos(startpos), lc_len(1), lc_cur(0), 
   wrapped(0), stopped(0), prev_sync_bb(0), sync_cnt(0), prev_sync_speed(-1),
   prev_sync_type(0), prevbpm(0.0), prevtap(0),
   metroofs(metrolen), metrohiofs(metrolen), metroloofs(metrolen),
   metrolen(METRONOME_HIT_LEN), metrotonelen(METRONOME_TONE_LEN), metroactive(0), metrovol(METRONOME_INIT_VOL),
-  numsyncpos(0), clockrun(SS_NONE) {
+  numsyncpos(0), clockrun(SS_NONE) , pulse_idx(pulseIdx) {
 #define METRO_HI_FREQ 880
 #define METRO_HI_AMP 1.5
 #define METRO_LO_FREQ 440
@@ -604,14 +602,9 @@ void Pulse::process(char pre, nframes_t l, AudioBuffers *ab) {
       // Long count
       lc_cur++;
       if (lc_cur >= lc_len)
-#if ! HANDSFREE
-
-        lc_cur = 0;
-
-#else // HANDSFREE
-				{ lc_cur = 0; Fweelin::HandsfreeInst->HandlePulse() ; }
+				{ lc_cur = 0; Fweelin::HandsfreeInst->HandlePulse(pulse_idx) ; } // HANDSFREE
 //if (!(lc_cur = ++lc_cur % lc_len)) printf("T_EV_PulseSync lc_len=%d lc_cur=%d\n" , lc_len , lc_cur) ;
-#endif // HANDSFREE
+
 
       // Send out a pulse sync event
       PulseSyncEvent *pevt = (PulseSyncEvent *) 

@@ -4,7 +4,6 @@
 #include "fweelin_handsfree.h"
 
 // DEBUG:
-#define DEBUG 1
 bool critters = true ; // TODO: change all to CRITTERS 
 void Handsfree::dbgLoopsStatus(Loopset* loopset)
 {
@@ -38,49 +37,11 @@ void Handsfree::ReceiveEvent(Event* ev, EventProducer* from)
 }
 
 // handsfree functions
-void Handsfree::HandlePulse()
-{
-	bool isSetChange = (this->nextLoopsetIdx != this->prevLoopsetIdx) ;
-	Loopset* prevLoopset ; Loopset* nextLoopset ; int prevLoopIdx , nextLoopIdx ;
-	prevLoopset = this->Loopsets[this->prevLoopsetIdx] ;
-	nextLoopset = this->Loopsets[this->nextLoopsetIdx] ;
-	prevLoopIdx = prevLoopset->baseIdx + prevLoopset->fill ;
-
-#if DEBUG
-printf("\nDEBUG: HandlePulse() isAutoRecord = %s\n" , (nextLoopset->isAutoRecord)? "true" : "false") ;
-printf("DEBUG: HandlePulse() isSetChange = %s\n" , (isSetChange)? "true" : "false") ;
-printf("DEBUG: HandlePulse() no pulse %s recording\n" , (getLoopStatus(prevLoopIdx) == T_LS_Recording)? "was" : "not") ;
-printf("DEBUG: HandlePulse() prevLoopset = %d nextLoopset = %d\n" , this->prevLoopsetIdx , this->nextLoopsetIdx) ;
-#endif // DEBUG:
-
-	this->prevLoopsetIdx = this->nextLoopsetIdx ;
-
-	if (getLoopStatus(prevLoopIdx) == T_LS_Recording)
-	{
-		if (critters) printf("HANDSFREE: stopping recording loop %d\n" , prevLoopIdx) ;
-		triggerLoop(prevLoopIdx) ; prevLoopset->fill = prevLoopset->fill + 1 ;
-	}
-	if (isSetChange) selectPulse(nextLoopsetIdx) ;
-	if (nextLoopset->isAutoRecord && nextLoopset->fill < MAX_LOOPSET_FILL)
-	{
-// TODO: KLUDGE: increment this to 1 in handleKeypress() on 3rd press (xml cfg is triggering new loops now)
-if (!nextLoopset->fill) nextLoopset->fill = 1 ; // we only can be here after a pulse exists
-
-		nextLoopIdx = nextLoopset->baseIdx + nextLoopset->fill ;
-
-#if DEBUG
-printf("DEBUG: handlePulse() prevLoopIdx = %d nextLoopIdx = %d\n" , prevLoopIdx , nextLoopIdx) ;
-dbgLoopsStatus(nextLoopset) ;
-#endif // DEBUG:
-
-		if (critters) printf("HANDSFREE: recording new loop %d\n" , nextLoopIdx) ;
-		triggerLoop(nextLoopIdx) ;
-	}
-
-#if DEBUG
-else if (!nextLoopset->isAutoRecord) printf("DEBUG: Loopset full fill=%d\n" , nextLoopset->fill) ;
-#endif // DEBUG
-}
+void Handsfree::HandlePulse(int wrappedPulseIdx) {
+bool isCurrPulseWrapped = (~getPulseIdx() && wrappedPulseIdx == this->prevLoopsetIdx) ;
+printf("DEBUG: HandlePulse() wrappedPulseIdx=%d currPulseIdx=%d wrapped - %s\n" , wrappedPulseIdx , getPulseIdx() ,
+(isCurrPulseWrapped)? "triggerLoops()" : "ignoring") ;
+	if (isCurrPulseWrapped) triggerLoops() ; }
 
 
 // private
@@ -89,13 +50,13 @@ else if (!nextLoopset->isAutoRecord) printf("DEBUG: Loopset full fill=%d\n" , ne
 void Handsfree::addListeners()
 {
 	// events are listed in fweelin_event.cc:160
-	printf("HANDSFREE: Registering event listeners\n") ;
+	printf(REGISTER_EVENT_DBG) ;
 	this->app->getEMG()->ListenEvent(this , 0 , T_EV_Input_Key) ;
 }
 
 void Handsfree::removeListeners()
 {
-	printf("HANDSFREE: Unregistering event listeners\n") ;
+	printf(UNREGISTER_EVENT_DBG) ;
 	this->app->getEMG()->UnlistenEvent(this , 0 , T_EV_Input_Key) ;
 }
 
@@ -108,16 +69,17 @@ double Handsfree::getTimestamp()
 }
 
 //bool Handsfree::getKeyMutexState() { return this->keyMutex ; }
-bool Handsfree::isTimestampStale() { return (getTimestamp() - this->lastKeypress) > 0.25 ; }
+bool Handsfree::isTimestampStale()
+	{ return (getTimestamp() - this->lastKeypress) > SUPRESS_KEYPRESS_INTERVAL ; }
 
 //void Handsfree::setKeyMutexState(bool isOn) { if (!isOn) usleep(250000) ; this->keyMutex = isOn ; }
 void Handsfree::setTimestamp() { this->lastKeypress = getTimestamp() ; }
 
 int Handsfree::getPulseIdx()
-{ LoopManager* loopMan = this->app->getLOOPMGR() ; return loopMan->GetCurPulseIndex() ; }
+	{ LoopManager* loopMan = this->app->getLOOPMGR() ; return loopMan->GetCurPulseIndex() ; }
 
 int Handsfree::getLoopStatus(int loopIdx) // LoopStatus enum in fweelin_core.h
-{ LoopManager* loopMan = this->app->getLOOPMGR() ; return loopMan->GetStatus(loopIdx) ; }
+	{ LoopManager* loopMan = this->app->getLOOPMGR() ; return loopMan->GetStatus(loopIdx) ; }
 
 void Handsfree::triggerLoop(int loopIdx)
 {
@@ -147,79 +109,92 @@ void Handsfree::selectPulse(int pulseIdx)
 {
 	SelectPulseEvent* spev = (SelectPulseEvent*) Event::GetEventByType(T_EV_SelectPulse) ;
 	spev->pulse = pulseIdx ; app->getEMG()->BroadcastEventNow(spev , this) ;
+	while (getPulseIdx() != pulseIdx) {
+
+printf("DEBUG: selectPulse() waiting for pulse\n") ; usleep(SELECT_PULSE_WAIT) ; }
 }
 
 // handsfree functions
 void Handsfree::handleKeypress(Event* ev)
 {
 	KeyInputEvent* kev = (KeyInputEvent*)ev ;
-	if ((kev->keysym == TRIGGER_LOOP_KEY || kev->keysym == TOGGLE_LOOPSET_KEY) &&
+	if ((kev->keysym == LOOPSET_KEY || kev->keysym == RECORD_KEY) &&
 		kev->down && isTimestampStale()) setTimestamp() ; else return ;
 
 #if DEBUGVB
 if (kev->down) printf("handleKeypress() key is down\n") ; else return ;
 if (!getKeyMutexState()) printf("handleKeypress() mutex is free\n") ; else return ;
-if (kev->keysym == TRIGGER_LOOP_KEY) printf("handleKeypress() key is TRIGGER_LOOP_KEY\n") ;
-if (kev->keysym == TOGGLE_LOOPSET_KEY) printf("handleKeypress() key is TOGGLE_LOOPSET_KEY\n") ;
+if (kev->keysym == LOOPSET_KEY) printf("handleKeypress() key is LOOPSET_KEY\n") ;
+else if (kev->keysym == RECORD_KEY) printf("handleKeypress() key is RECORD_KEY\n") ;
 #endif // DEBUGVB
 
-	if (kev->keysym == TOGGLE_LOOPSET_KEY) handleToggleLoopsetKey() ;
-	else if (kev->keysym == TRIGGER_LOOP_KEY) handleTriggerLoopKey() ;
+	if (kev->keysym == LOOPSET_KEY) toggleLoopset() ;
+	else if (kev->keysym == RECORD_KEY)
+		if (~this->Loopsets[this->prevLoopsetIdx]->pulseIdx) toggleAutoRecord() ;
+		else triggerLoops() ;
 }
 
-void Handsfree::handleToggleLoopsetKey()
+void Handsfree::toggleLoopset()
 	{ this->nextLoopsetIdx = (this->nextLoopsetIdx + 1) % N_LOOPSETS ; }
 
-void Handsfree::handleTriggerLoopKey()
+void Handsfree::triggerLoops()
 {
-	// 1st call per loopset - record first loop
-	// 2nd call per loopset - increment counter - create pulse - record second loop		
-	// sunbsequent calls - loops will now auto-record on pulse wrap in HandlePulse()
-	if (!(~getPulseIdx())) // no pulse
+	// 1st call per loopset - on keypress or pulse wrap - record first loop
+	// 2nd call per loopset - on keypress - create pulse - record second loop
+	// sunbsequent calls - on pulse wrap - record next loop
+	bool isSetChange = (this->nextLoopsetIdx != this->prevLoopsetIdx) ;
+	Loopset* prevLoopset ; Loopset* nextLoopset ; int prevLoopIdx , nextLoopIdx ;
+	prevLoopset = this->Loopsets[this->prevLoopsetIdx] ;
+	nextLoopset = this->Loopsets[this->nextLoopsetIdx] ;
+	prevLoopIdx = prevLoopset->baseIdx + prevLoopset->fill ;
+
+#if DEBUG
+printf("\nDEBUG: triggerLoops() isAutoRecord = %s\n" , (nextLoopset->isAutoRecord)? "true" : "false") ;
+printf("DEBUG: triggerLoops() isSetChange = %s\n" , (isSetChange)? "true" : "false") ;
+printf("DEBUG: triggerLoops() pulse %d - %s recording\n" , getPulseIdx() , (getLoopStatus(prevLoopIdx) == T_LS_Recording)? "was" : "not") ;
+printf("DEBUG: triggerLoops() prevLoopset = %d nextLoopset = %d\n" , this->prevLoopsetIdx , this->nextLoopsetIdx) ;
+#endif // DEBUG:
+
+	bool wasRecording = (getLoopStatus(prevLoopIdx) == T_LS_Recording) ;
+	if (wasRecording)
 	{
-		bool isSetChange = (this->nextLoopsetIdx != this->prevLoopsetIdx) ;
-		Loopset* prevLoopset ; Loopset* nextLoopset ; int prevLoopIdx , nextLoopIdx ;
-		prevLoopset = this->Loopsets[this->prevLoopsetIdx] ;
-		nextLoopset = this->Loopsets[this->nextLoopsetIdx] ;
-		prevLoopIdx = prevLoopset->baseIdx + prevLoopset->fill ;
+		bool isPulseExist = (prevLoopset->pulseIdx == PULSE_NONE) ;
+		triggerLoop(prevLoopIdx) ; prevLoopset->fill = prevLoopset->fill + 1 ;
+		if (isPulseExist) selectPulse(prevLoopset->pulseIdx = this->prevLoopsetIdx) ;
 
-// TODO: what we really want to know is if the first loopid is empty
-//		for now if not T_LS_Recording assume the first loop does not exist
-#if DEBUG
-printf("\nDEBUG: handleKeypress() isAutoRecord = %s\n" , (nextLoopset->isAutoRecord)? "true" : "false") ;
-printf("DEBUG: handleKeypress() isSetChange = %s\n" , (isSetChange)? "true" : "false") ;
-printf("DEBUG: handleKeypress() no pulse %s recording\n" , (getLoopStatus(prevLoopIdx) == T_LS_Recording)? "was" : "not") ;
-printf("DEBUG: handleKeypress() prevLoopset = %d nextLoopset = %d\n" , this->prevLoopsetIdx , this->nextLoopsetIdx) ;
-#endif // DEBUG:
-
-		if (getLoopStatus(prevLoopIdx) == T_LS_Recording)
-		{
-			triggerLoop(prevLoopIdx) ; prevLoopset->fill = prevLoopset->fill + 1 ; 
-			selectPulse(this->prevLoopsetIdx) ;
-
-while (!(~getPulseIdx())) { printf("waiting for pulse\n") ; usleep(100000) ; }
-		}
-
-		if (isSetChange) selectPulse(this->nextLoopsetIdx) ;
-		nextLoopIdx = nextLoopset->baseIdx + nextLoopset->fill ;
-		if (nextLoopset->isAutoRecord && nextLoopset->fill < MAX_LOOPSET_FILL)
-			triggerLoop(nextLoopIdx) ;
-
-		this->prevLoopsetIdx = this->nextLoopsetIdx ;
-
-#if DEBUG
-printf("DEBUG: handleKeypress() prevLoopIdx = %d nextLoopIdx = %d\n" , prevLoopIdx , nextLoopIdx) ;
-#endif // DEBUG:
+if (critters) if (isPulseExist) printf(CREATE_PULSE_DBG , prevLoopIdx) ;
+else printf(END_RECORD_DBG , prevLoopIdx) ;
 	}
-	else // pulse exists - just toggle isAutoRecord
+
+	if (isSetChange) selectPulse(nextLoopset->pulseIdx) ;
+	if (nextLoopset->isAutoRecord && nextLoopset->fill < MAX_LOOPSET_FILL)
 	{
+		nextLoopIdx = nextLoopset->baseIdx + nextLoopset->fill ; triggerLoop(nextLoopIdx) ;
+
+if (critters)	if(wasRecording) printf(NEW_LOOP_DBG , nextLoopIdx) ;
+	else printf(INITIAL_LOOP_DBG , nextLoopIdx) ;// isManual
+	}
+
 #if DEBUG
-printf("handleKeypress() pulse exists\n") ;
+else if (nextLoopset->isAutoRecord) printf("DEBUG: triggerLoops() Loopset full fill=%d\n" , nextLoopset->fill) ;
 #endif // DEBUG
 
-		Loopset* nextLoopset = this->Loopsets[this->nextLoopsetIdx] ;
-		nextLoopset->isAutoRecord = !nextLoopset->isAutoRecord ;
-		if (critters) printf("HANDSFREE: AutoRecord (%d)\n" , nextLoopset->isAutoRecord) ;
-	}
+	this->prevLoopsetIdx = this->nextLoopsetIdx ;
+
+#if DEBUG
+printf("DEBUG: triggerLoops() prevLoopIdx = %d nextLoopIdx = %d\n" , prevLoopIdx , nextLoopIdx) ;
+#endif // DEBUG:
+}
+
+void Handsfree::toggleAutoRecord()
+{
+#if DEBUG
+printf("DEBUG: handleKeypress() pulse exists\n") ;
+#endif // DEBUG
+
+	Loopset* nextLoopset = this->Loopsets[this->nextLoopsetIdx] ;
+	nextLoopset->isAutoRecord = !nextLoopset->isAutoRecord ;
+
+if (critters) printf(TOGGLE_AUTORECORD_DBG , nextLoopset->isAutoRecord) ;
 }
 

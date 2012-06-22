@@ -327,7 +327,7 @@ public:
   // Maximum number of user-defined pulse sync callbacks
   const static int MAX_SYNC_POS = 1000;
 
-  Pulse(Fweelin *app, nframes_t len, nframes_t startpos);
+  Pulse(Fweelin *app , nframes_t len , nframes_t startpos , int pulseIdx) ; // HANDSFREE
   ~Pulse();
 
   inline float round(float num) {
@@ -468,6 +468,9 @@ public:
   int numsyncpos; // Current number of sync positions
   
   SyncStateType clockrun;  // Status of MIDI clock
+
+	// HANDSFREE
+	int pulse_idx ; // index into LoopManager::pulses[] for Handsfree::HandlePulse()
 };
 
 // This class implements a quick auto limiter.
