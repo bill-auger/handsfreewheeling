@@ -602,9 +602,12 @@ void Pulse::process(char pre, nframes_t l, AudioBuffers *ab) {
       // Long count
       lc_cur++;
       if (lc_cur >= lc_len)
+#if ! HANDSFREE
+				lc_cur = 0;
+#else // HANDSFREE
 				{ lc_cur = 0; Fweelin::HandsfreeInst->HandlePulse(pulse_idx) ; } // HANDSFREE
 //if (!(lc_cur = ++lc_cur % lc_len)) printf("T_EV_PulseSync lc_len=%d lc_cur=%d\n" , lc_len , lc_cur) ;
-
+#endif // HANDSFREE
 
       // Send out a pulse sync event
       PulseSyncEvent *pevt = (PulseSyncEvent *) 

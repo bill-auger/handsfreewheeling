@@ -1,8 +1,10 @@
-<!-- handsfree.xml v0.3.2.0 for freewheeling v0.6.1 svn
-		Mr. J - 2011-05-13
-using xdotool source kludge to schedule fades - single pulse
--->
+<!-- handsfree.xml v0.4.0 for handsfreewheeling
+		forked from freewheeling v0.6.1 svn
+		Mr. J - 2012-06-20
 
+transitioning to source code based solution
+currently auto-record , set-changes , and delete most recent loop work (kinda)
+-->
 
 
 <interface>
@@ -11,12 +13,14 @@ using xdotool source kludge to schedule fades - single pulse
 
 <!-- Variables -->
 
-	<declare var="TOGGLE_loopset" type="int" init="1"/>
+<!-- transitioned:
+	<declare var="HANDSFREE_set0_fill" type="int" init="0"/>
+	<declare var="HANDSFREE_set1_fill" type="int" init="0"/>
+	<declare var="HANDSFREE_set2_fill" type="int" init="0"/>
+-->
+<!--	<declare var="VAR_toggle_loopset" type="int" init="1"/> -->
 	<declare var="VAR_prev_loopset" type="int" init="1"/>
 	<declare var="VAR_next_loopset" type="int" init="1"/>
-	<declare var="TOGGLE_set1_fill" type="int" init="0"/>
-	<declare var="TOGGLE_set2_fill" type="int" init="0"/>
-	<declare var="TOGGLE_set3_fill" type="int" init="0"/>
 	<declare var="VAR_prev_fill" type="int" init="0"/>
 	<declare var="VAR_next_fill" type="int" init="0"/>
 	<declare var="VAR_this_loopid" type="int" init="0"/>
@@ -76,16 +80,22 @@ output4="switch-metronome" parameters4="pulse=1 and metronome=1"/>
 <!-- Misc Functions -->
 
 	<!-- HELP: <KP0>: Toggle Loop-Set -->
+<!-- this functinoality is being transitioined the Handsfree class of the main program -->
+<!-- HANDSFREE_toggle_loopset and VAR_next_loopset will likely be the same var
+			(Handsfree::next_loopsetIdx) -->
+<!-- 	transitioned:
+		output1="toggle-variable" parameters1="var=HANDSFREE_toggle_loopset and minvalue=1 and maxvalue=3"
+		output2="set-variable" parameters2="var=VAR_next_loopset and value=HANDSFREE_toggle_loopset"
+-->
 	<binding input="key" conditions="key=KP0 and keydown=1"
-		output1="toggle-variable" parameters1="var=TOGGLE_loopset and minvalue=1 and maxvalue=3"
-		output2="set-variable" parameters2="var=VAR_next_loopset and value=TOGGLE_loopset"
-		output3="go-sub" parameters3="sub=22"/>
-	<binding input="go-sub" conditions="sub=22 and TOGGLE_loopset=1"
-		output1="set-variable" parameters1="var=VAR_next_fill and value=TOGGLE_set1_fill"/>
-	<binding input="go-sub" conditions="sub=22 and TOGGLE_loopset=2"
-		output1="set-variable" parameters1="var=VAR_next_fill and value=TOGGLE_set2_fill"/>
-	<binding input="go-sub" conditions="sub=22 and TOGGLE_loopset=3"
-		output1="set-variable" parameters1="var=VAR_next_fill and value=TOGGLE_set3_fill"/>
+		output1="toggle-variable" parameters1="var=VAR_next_loopset and minvalue=1 and maxvalue=3"
+		output2="go-sub" parameters2="sub=22"/>
+	<binding input="go-sub" conditions="sub=22 and HANDSFREE_toggle_loopset=0"
+		output1="set-variable" parameters1="var=VAR_next_fill and value=HANDSFREE_set0_fill"/>
+	<binding input="go-sub" conditions="sub=22 and HANDSFREE_toggle_loopset=1"
+		output1="set-variable" parameters1="var=VAR_next_fill and value=HANDSFREE_set1_fill"/>
+	<binding input="go-sub" conditions="sub=22 and HANDSFREE_toggle_loopset=2"
+		output1="set-variable" parameters1="var=VAR_next_fill and value=HANDSFREE_set2_fill"/>
 
 	<!-- HELP: <BACKSPACE>: Toggle Pause Mode -->
 	<binding input="key" conditions="key=backspace and keydown=1"
@@ -113,20 +123,24 @@ output4="switch-metronome" parameters4="pulse=1 and metronome=1"/>
 
 
 <!-- Trigger Loops -->
+<!-- this functinoality is being transitioined the Handsfree class of the main program -->
 
 
 <!-- Erase Loops -->
 
 	<!-- HELP: <SHIFT> + <ESC>: Erase All -->
+<!-- this functinoality is broken for now during transitioin the Handsfree class of the main program
+    <binding input="key" conditions="key=escape and keydown=1 and VAR_keyheld_shift=1"
+		output2="set-variable" parameters2="var=HANDSFREE_set0_fill and value=0" // system var now
+		output3="set-variable" parameters3="var=HANDSFREE_set1_fill and value=0" // system var now
+		output4="set-variable" parameters4="var=HANDSFREE_set2_fill and value=0" // system var now
+-->
     <binding input="key" conditions="key=escape and keydown=1 and VAR_keyheld_shift=1"
 		output1="set-variable" parameters1="var=VAR_prev_fill and value=0"
-		output2="set-variable" parameters2="var=TOGGLE_set1_fill and value=0"
-		output3="set-variable" parameters3="var=TOGGLE_set2_fill and value=0"
-		output4="set-variable" parameters4="var=TOGGLE_set3_fill and value=0"
-		output5="delete-pulse" parameters5="pulse=0"
-		output6="delete-pulse" parameters6="pulse=1"
-		output7="delete-pulse" parameters7="pulse=2"
-		output8="erase-all-loops"/>
+		output2="delete-pulse" parameters2="pulse=0"
+		output3="delete-pulse" parameters3="pulse=1"
+		output4="delete-pulse" parameters4="pulse=2"
+		output5="erase-all-loops"/>
 
 	<!-- HELP: <CAPS> + <ESC>: Erase Loopset -->
 <!-- this needs to check if recording loop is in this set and delete it manually
@@ -134,19 +148,19 @@ output4="switch-metronome" parameters4="pulse=1 and metronome=1"/>
 			conditions="VAR_keyheld_caps=1 and key=escape and keydown=1 and
 						VAR_next_loopset=1"
 			output1="delete-pulse" parameters1="pulse=1"
-			output2="set-variable" parameters2="var=TOGGLE_set1_fill and
+			output2="set-variable" parameters2="var=HANDSFREE_set0_fill and
 value=0"/>
 	<binding input="key"
 			conditions="VAR_keyheld_caps=1 and key=escape and keydown=1 and
 						VAR_next_loopset=2"
 			output1="delete-pulse" parameters1="pulse=2"
-			output2="set-variable" parameters2="var=TOGGLE_set2_fill and
+			output2="set-variable" parameters2="var=HANDSFREE_set1_fill and
 value=0"/>
 	<binding input="key"
 			conditions="VAR_keyheld_caps=1 and key=escape and keydown=1 and
 						VAR_next_loopset=3"
 			output1="delete-pulse" parameters1="pulse=3"
-			output2="set-variable" parameters2="var=TOGGLE_set3_fill and
+			output2="set-variable" parameters2="var=HANDSFREE_set2_fill and
 value=0"/>
 -->
     <!-- HELP: <SHIFT> + <KEY> or Right-click: Erase loop -->
@@ -165,51 +179,58 @@ value=0"/>
 						VAR_keyheld_shift=1"
 			output1="erase-loop" parameters1="loopid=key"/>
 -->
-	<!-- HELP: <ESC>: Undo Youngest Loop -->
-<!-- perhaps also do something dryer (FLAG_set_fills mod 10^VAR_next_loopset) -->
-	<binding input="key" conditions="key=escape and keydown=1 and SYSTEM_num_recording_loops_in_map=1>8"
-		output1="erase-loop" parameters1="loopid=VAR_this_loopid"
-		output2="set-variable" parameters2="var=VAR_this_loopid and value=VAR_this_loopid - 1"/>
-	<binding input="key" conditions="key=escape and keydown=1 and
-			TOGGLE_loopset=VAR_prev_loopset and VAR_prev_fill=2>8"
-		output1="set-variable" parameters1="var=VAR_prev_fill and value=VAR_prev_fill - 1"
-		output2="go-sub" parameters2="sub=10"/>
-	<binding input="key" conditions="key=escape and keydown=1 and
-			TOGGLE_loopset=VAR_prev_loopset and VAR_prev_fill=0>1"
-		output1="set-variable" parameters1="var=VAR_prev_fill and value=0"
-		output2="go-sub" parameters2="sub=10"/>
-	<binding input="key" conditions="key=escape and keydown=1"
-		output1="go-sub" parameters1="sub=10"/>
 
-	<binding input="go-sub" conditions="sub=10 and TOGGLE_loopset=1 and TOGGLE_set1_fill=2>8"
-		output1="erase-loop" parameters1="loopid=10 + TOGGLE_set1_fill - 1"
-		output2="set-variable" parameters2="var=TOGGLE_set1_fill and value=TOGGLE_set1_fill - 1"/>
-	<binding input="go-sub" conditions="sub=10 and TOGGLE_loopset=2 and TOGGLE_set2_fill=2>8"
-		output1="erase-loop" parameters1="loopid=20 + TOGGLE_set2_fill - 1"
-		output2="set-variable" parameters2="var=TOGGLE_set2_fill and value=TOGGLE_set2_fill - 1"/>
-	<binding input="go-sub" conditions="sub=10 and TOGGLE_loopset=3 and TOGGLE_set3_fill=2>8"
-		output1="erase-loop" parameters1="loopid=30 + TOGGLE_set3_fill - 1"
-		output2="set-variable" parameters2="var=TOGGLE_set3_fill and value=TOGGLE_set3_fill - 1"/>
-	<binding input="go-sub" conditions="sub=10 and TOGGLE_loopset=1 and TOGGLE_set1_fill=0>1"
-		output1="delete-pulse" parameters1="pulse=0"
-		output2="set-variable" parameters2="var=TOGGLE_set1_fill and value=0"
-		output3="go-sub" parameters3="sub=11"/>
-	<binding input="go-sub" conditions="sub=10 and TOGGLE_loopset=2 and TOGGLE_set2_fill=0>1"
-		output1="delete-pulse" parameters1="pulse=1"
-		output2="set-variable" parameters2="var=TOGGLE_set2_fill and value=0"
-		output3="go-sub" parameters3="sub=11"/>
-	<binding input="go-sub" conditions="sub=10 and TOGGLE_loopset=3 and TOGGLE_set3_fill=0>1"
-		output1="delete-pulse" parameters1="pulse=2"
-		output2="set-variable" parameters2="var=TOGGLE_set3_fill and value=0"
-		output3="go-sub" parameters3="sub=11"/>
+	<!-- HELP: <ESC>: Undo Youngest Loop -->
+<!-- this functinoality is broken for now during transitioin the Handsfree class of the main program
+	transitioned:
+// x3 instances
+	<binding input="go-sub" conditions="sub=10 and HANDSFREE_toggle_loopset=0 and HANDSFREE_set0_fill=2>8"
+		output2="set-variable" parameters2="var=HANDSFREE_set0_fill and value=HANDSFREE_set0_fill - 1"
+
+// x3 instances
+	<binding input="go-sub" conditions="sub=10 and HANDSFREE_toggle_loopset=0 and HANDSFREE_set0_fill=0>1"
+		output2="set-variable" parameters2="var=HANDSFREE_set0_fill and value=0"
+-->
+	<binding input="key" conditions="key=escape and keydown=1 and SYSTEM_num_recording_loops_in_map=1>8"
+		output1="go-sub" parameters1="sub=10"/>
+	<binding input="key" conditions="key=escape and keydown=1 and
+			HANDSFREE_toggle_loopset=VAR_prev_loopset and VAR_prev_fill=2>8"
+		output1="set-variable" parameters1="var=VAR_prev_fill and value=VAR_prev_fill - 1"
+		output2="go-sub" parameters2="sub=11"/>
+	<binding input="key" conditions="key=escape and keydown=1 and
+			HANDSFREE_toggle_loopset=VAR_prev_loopset and VAR_prev_fill=0>1"
+		output1="set-variable" parameters1="var=VAR_prev_fill and value=0"
+		output2="go-sub" parameters2="sub=11"/>
+	<binding input="key" conditions="key=escape and keydown=1"
+		output1="go-sub" parameters1="sub=11"/>
+
+	<binding input="go-sub" conditions="sub=10 and HANDSFREE_toggle_loopset=0"
+		output1="erase-loop" parameters1="loopid=10 + HANDSFREE_set0_fill" />
+	<binding input="go-sub" conditions="sub=10 and HANDSFREE_toggle_loopset=1"
+		output1="erase-loop" parameters1="loopid=20 + HANDSFREE_set1_fill" />
+	<binding input="go-sub" conditions="sub=10 and HANDSFREE_toggle_loopset=2"
+		output1="erase-loop" parameters1="loopid=30 + HANDSFREE_set2_fill" />
+
+	<binding input="go-sub" conditions="sub=11 and HANDSFREE_toggle_loopset=0 and HANDSFREE_set0_fill=2>8"
+		output1="erase-loop" parameters1="loopid=10 + HANDSFREE_set0_fill - 1"/>
+	<binding input="go-sub" conditions="sub=11 and HANDSFREE_toggle_loopset=1 and HANDSFREE_set1_fill=2>8"
+		output1="erase-loop" parameters1="loopid=20 + HANDSFREE_set1_fill - 1"/>
+	<binding input="go-sub" conditions="sub=11 and HANDSFREE_toggle_loopset=2 and HANDSFREE_set2_fill=2>8"
+		output1="erase-loop" parameters1="loopid=30 + HANDSFREE_set2_fill - 1"/>
+	<binding input="go-sub" conditions="sub=11 and HANDSFREE_toggle_loopset=0 and HANDSFREE_set0_fill=0>1"
+		output1="delete-pulse" parameters1="pulse=0"/>
+	<binding input="go-sub" conditions="sub=11 and HANDSFREE_toggle_loopset=1 and HANDSFREE_set1_fill=0>1"
+		output1="delete-pulse" parameters1="pulse=1"/>
+	<binding input="go-sub" conditions="sub=11 and HANDSFREE_toggle_loopset=2 and HANDSFREE_set2_fill=0>1"
+		output1="delete-pulse" parameters1="pulse=2"/>
 
 <!-- this may also work if pulses= 1, 10, 100
 			output4="delete-pulse"
-			parameters4="pulse=TOGGLE_set1_fill * 10 ^ VAR_next_loopset"/>
+			parameters4="pulse=HANDSFREE_set0_fill * 10 ^ VAR_next_loopset"/>
 
 
 output2="set-variable" parameters2="var=VAR_this_loopid and value=VAR_this_loopid - 1"/>
-<binding input="key" conditions="key=escape and keydown=1 and TOGGLE_loopset=1"
+<binding input="key" conditions="key=escape and keydown=1 and HANDSFREE_toggle_loopset=1"
 -->
 <!-- maybe delete the youngest in VAR_next_loopset if not the current set
 		while recording -->
@@ -356,41 +377,41 @@ output2="set-variable" parameters2="var=VAR_this_loopid and value=VAR_this_loopi
 
 <!-- seperators -->
 
-	<display 	id="1" var="1 / TOGGLE_loopset"
+	<display 	id="1" var="1 / HANDSFREE_toggle_loopset"
 			title="" pos="0.4,0.15" type="bar" font="main"
 			orientation="vertical" barscale="0.15" thickness="0.001"/>
-	<display 	id="1" var="1 / TOGGLE_loopset"
+	<display 	id="1" var="1 / HANDSFREE_toggle_loopset"
 			title="" pos="0.6,0.15" type="bar" font="main"
 			orientation="vertical" barscale="0.15" thickness="0.001"/>
-	<display 	id="1" var="1 / TOGGLE_loopset"
+	<display 	id="1" var="1 / HANDSFREE_toggle_loopset"
 			title="" pos="0.35,0.3" type="bar" font="main"
 			orientation="vertical" barscale="0.15" thickness="0.001"/>
-	<display 	id="1" var="1 / TOGGLE_loopset"
+	<display 	id="1" var="1 / HANDSFREE_toggle_loopset"
 			title="" pos="0.65,0.3" type="bar" font="main"
 			orientation="vertical" barscale="0.15" thickness="0.001"/>
-	<display 	id="1" var="1 / TOGGLE_loopset"
+	<display 	id="1" var="1 / HANDSFREE_toggle_loopset"
 			title="" pos="0.3,0.45" type="bar" font="main"
 			orientation="vertical" barscale="0.15" thickness="0.001"/>
-	<display 	id="1" var="1 / TOGGLE_loopset"
+	<display 	id="1" var="1 / HANDSFREE_toggle_loopset"
 			title="" pos="0.7,0.45" type="bar" font="main"
 			orientation="vertical" barscale="0.15" thickness="0.001"/>
 
-	<display 	id="1" var="1 / TOGGLE_loopset"
+	<display 	id="1" var="1 / HANDSFREE_toggle_loopset"
 			title="" pos="0.35,0.15" type="bar" font="main"
 			orientation="horizontal" barscale="0.05" thickness="0.001"/>
-	<display 	id="1" var="1 / TOGGLE_loopset"
+	<display 	id="1" var="1 / HANDSFREE_toggle_loopset"
 			title="" pos="0.6,0.15" type="bar" font="main"
 			orientation="horizontal" barscale="0.05" thickness="0.001"/>
-	<display 	id="1" var="1 / TOGGLE_loopset"
+	<display 	id="1" var="1 / HANDSFREE_toggle_loopset"
 			title="" pos="0.3,0.3" type="bar" font="main"
 			orientation="horizontal" barscale="0.05" thickness="0.001"/>
-	<display 	id="1" var="1 / TOGGLE_loopset"
+	<display 	id="1" var="1 / HANDSFREE_toggle_loopset"
 			title="" pos="0.65,0.3" type="bar" font="main"
 			orientation="horizontal" barscale="0.05" thickness="0.001"/>
-	<display 	id="1" var="1 / TOGGLE_loopset"
+	<display 	id="1" var="1 / HANDSFREE_toggle_loopset"
 			title="" pos="0.25,0.45" type="bar" font="main"
 			orientation="horizontal" barscale="0.05" thickness="0.001"/>
-	<display 	id="1" var="1 / TOGGLE_loopset"
+	<display 	id="1" var="1 / HANDSFREE_toggle_loopset"
 			title="" pos="0.7,0.45" type="bar" font="main"
 			orientation="horizontal" barscale="0.05" thickness="0.001"/>
 	
@@ -411,12 +432,35 @@ output2="set-variable" parameters2="var=VAR_this_loopid and value=VAR_this_loopi
 		<element id="3" name="BRIDGE" base="0.0,0.0" looppos="0.05,0.05"
 				loopsize="0.125" namepos="0.02,-0.024"></element>
 	</layout>
-	<display 	id="1" var="1 / TOGGLE_loopset" pos="0.2,0.5"
-			title="VERSE " type="switch" font="main"/>
-	<display 	id="2" var="4 - TOGGLE_loopset * TOGGLE_loopset - 3" pos="0.45,0.5"
-			title="CHORUS" type="switch" font="main"/>
-	<display 	id="3" var="-3 / TOGGLE_loopset + 4 / 3" pos="0.7,0.5"
-			title="BRIDGE " type="switch" font="main"/>
+
+<!-- some voodoo to work with the quirky math parser -->	
+<!-- non-zero when input is 0 and only 0 (o/c we are dividing by 0 but it works) -->
+	<display 	id="1" var="HANDSFREE_toggle_loopset / HANDSFREE_toggle_loopset - 1"
+			title="VERSE " type="switch" font="main" pos="0.2,0.5" />
+<!-- non-zero when input is 1 and only 1 -->
+	<display 	id="2" var="HANDSFREE_toggle_loopset / HANDSFREE_toggle_loopset / HANDSFREE_toggle_loopset"
+			title="CHORUS" type="switch" font="main" pos="0.45,0.5" />
+<!-- non-zero when input is 2 and 4 only (luckily we only want 3 sets) -->
+	<display 	id="3" var="4 - HANDSFREE_toggle_loopset * HANDSFREE_toggle_loopset - 3 * HANDSFREE_toggle_loopset / HANDSFREE_toggle_loopset"
+			title="BRIDGE " type="switch" font="main" pos="0.7,0.5" />
+<!-- non-zero when non-zero input is 1 and only 1 -->
+<!-- 
+	<display 	id="1" var="1 / VAR_toggle_loopset"
+			title="VERSE " type="switch" font="main" pos="0.2,0.5" />
+-->
+<!-- non-zero when non-zero input is 2 and 4 only (luckily we only want 3 sets) -->
+<!-- 
+	<display 	id="2" var="4 - VAR_toggle_loopset * VAR_toggle_loopset - 3"
+			title="CHORUS" type="switch" font="main" pos="0.45,0.5" />
+-->
+<!-- non-zero when non-zero input is 3 or more (it should be non-zero for 2 and 3 only)
+			(-3 / 2 == -1.5)  -> ((int)-1.5 == -1) -> ((-1 + 4) / 3) == 1)
+			i suspect the parser always rounds down (not toward 0)
+			so any input >=3 would yield non-zero output -->
+<!-- 
+	<display 	id="3" var="-3 / VAR_toggle_loopset + 4 / 3"
+			title="BRIDGE " type="switch" font="main" pos="0.7,0.5" />
+-->
 
 <!--
 	<layout 	id="1" name="FootswitchL" scale="1.0,1.6" pos="0.2,0.58"
@@ -552,11 +596,11 @@ output2="set-variable" parameters2="var=VAR_this_loopid and value=VAR_this_loopi
      title="%CPU" pos="0.7,0.96"
      orientation="vertical" barscale="0.2" thickness="0.03"/>
 
-	<display var="TOGGLE_set1_fill" type="text" font="main"
+	<display var="HANDSFREE_set0_fill" type="text" font="main"
 			 title="" pos="0.26,0.53"/>
-	<display var="TOGGLE_set2_fill" type="text" font="main"
+	<display var="HANDSFREE_set1_fill" type="text" font="main"
 			 title="" pos="0.51,0.53"/>
-	<display var="TOGGLE_set3_fill" type="text" font="main"
+	<display var="HANDSFREE_set2_fill" type="text" font="main"
 			title="" pos="0.76,0.53"/>
 
 
@@ -566,14 +610,14 @@ output2="set-variable" parameters2="var=VAR_this_loopid and value=VAR_this_loopi
 	<display 	id="2" var="CONST_footswitch" type="text"
 			title="s/w id" font="main" pos="0.8,0.78" />
 -->
-	<display var="VAR_prev_loopset" type="text" font="main"
+	<display var="HANDSFREE_toggle_loopset" type="text" font="main"
 		title="PREVSET " pos="0.0,0.56"/>
-	<display var="VAR_prev_fill" type="text" font="main"
-		title="PREVFILL " pos="0.0,0.60"/>
-	<display var="VAR_next_loopset" type="text" font="main"
-		title="NEXTSET " pos="0.0,0.64"/>
 	<display var="VAR_next_fill" type="text" font="main"
-		title="NEXTFILL " pos="0.0,0.68"/>
+		title="NEXTFILL " pos="0.0,0.60"/>
+	<display var="VAR_prev_loopset" type="text" font="main"
+		title="LOOPSET " pos="0.0,0.64"/>
+	<display var="VAR_prev_fill" type="text" font="main"
+		title="PREVFILL " pos="0.0,0.68"/>
 	<display var="VAR_this_loopid" type="text" font="main"
 		title="THISLOOP " pos="0.0,0.72"/>
 	<display var="SYSTEM_num_loops_in_map" type="text" font="main"

@@ -20,7 +20,16 @@ void Handsfree::dbgLoopsStatus(Loopset* loopset)
 		printf("DEBUG: getLoopStatus(%d) = %s\n" , loopIdx , statusMsg) ;
 	}
 }
+
+void Handsfree::ERR(char* msg)
+	{ printf(FWEELIN_ERROR_COLOR_ON"\n%s\n"FWEELIN_ERROR_COLOR_OFF , msg) ; }
+void Handsfree::ERR(char* msg , char* s , int i , int j)
+{
+	char dbg[256] ; sprintf(dbg , msg , s , i , j) ;
+	printf(FWEELIN_ERROR_COLOR_ON"\n%s\n"FWEELIN_ERROR_COLOR_OFF , dbg) ;
+}
 // DEBUG: end
+
 
 
 // public
@@ -37,16 +46,53 @@ void Handsfree::ReceiveEvent(Event* ev, EventProducer* from)
 }
 
 // handsfree functions
-void Handsfree::HandlePulse(int wrappedPulseIdx) {
-bool isCurrPulseWrapped = (~getPulseIdx() && wrappedPulseIdx == this->prevLoopsetIdx) ;
+void Handsfree::HandlePulse(int wrappedPulseIdx)
+{
+	bool isCurrPulseWrapped = (~getPulseIdx() && wrappedPulseIdx == this->prevLoopsetIdx) ;
+
 printf("DEBUG: HandlePulse() wrappedPulseIdx=%d currPulseIdx=%d wrapped - %s\n" , wrappedPulseIdx , getPulseIdx() ,
 (isCurrPulseWrapped)? "triggerLoops()" : "ignoring") ;
-	if (isCurrPulseWrapped) triggerLoops() ; }
+
+	if (isCurrPulseWrapped) triggerLoops() ;
+}
 
 
 // private
 
-// event listeners
+// construction/destruction
+void Handsfree::init()
+{
+	// initialize Loopset structs
+	for (int i = 0 ; i < MAX_PULSES ; ++i)
+	{
+		Loopset* loopset = new Loopset() ;
+		loopset->baseIdx = (i + 1) * BASE_LOOPIDX_MULTIPLIER ; loopset->fill = 0 ;
+		loopset->pulseIdx = PULSE_NONE ; loopset->isAutoRecord = true ;
+		this->Loopsets[i] = loopset ;
+	}
+
+	// declare SystemVariables
+	FloConfig* cfg = app->getCFG() ;
+
+// TODO: list of #define constants for these singleton var names
+	cfg->AddEmptyVariable("HANDSFREE_toggle_loopset") ;
+	cfg->LinkSystemVariable("HANDSFREE_toggle_loopset" , T_int , (char*)&(this->nextLoopsetIdx)) ;
+	
+	for (int i = 0 ; i < MAX_PULSES ; ++i)
+	{
+// TODO: list of #define constants for these per-pulse var names
+		char varName[64] ; sprintf(varName , "HANDSFREE_set%d_fill" , i) ;
+		cfg->AddEmptyVariable(varName) ;
+	  cfg->LinkSystemVariable(varName , T_int , (char*)&(this->Loopsets[i]->fill)) ;
+		sprintf(varName , "HANDSFREE_set%d_autorecord" , i) ;
+		cfg->AddEmptyVariable(varName) ;
+	  cfg->LinkSystemVariable(varName , T_int , (char*)&(this->Loopsets[i]->isAutoRecord)) ;
+	}
+
+	this->addListeners() ;
+	printf("HANDSFREE: Initialized\n") ;
+}
+
 void Handsfree::addListeners()
 {
 	// events are listed in fweelin_event.cc:160
@@ -121,12 +167,13 @@ void Handsfree::handleKeypress(Event* ev)
 	if ((kev->keysym == LOOPSET_KEY || kev->keysym == RECORD_KEY) &&
 		kev->down && isTimestampStale()) setTimestamp() ; else return ;
 
-#if DEBUGVB
+#if DEBUG_KEYPRESS
 if (kev->down) printf("handleKeypress() key is down\n") ; else return ;
-if (!getKeyMutexState()) printf("handleKeypress() mutex is free\n") ; else return ;
-if (kev->keysym == LOOPSET_KEY) printf("handleKeypress() key is LOOPSET_KEY\n") ;
-else if (kev->keysym == RECORD_KEY) printf("handleKeypress() key is RECORD_KEY\n") ;
-#endif // DEBUGVB
+if (!isTimestampStale()) printf("handleKeypress() mutex is free\n") ; else return ;
+if (kev->keysym == LOOPSET_KEY) printf("handleKeypress() key is LOOPSET_KEY(%d)\n" , LOOPSET_KEY) ;
+else if (kev->keysym == RECORD_KEY) printf("handleKeypress() key is RECORD_KEY(%d)\n" , RECORD_KEY) ;
+else printf("handleKeypress() key unknown(%d)\n" , kev->keysym) ;
+#endif // DEBUG_KEYPRESS
 
 	if (kev->keysym == LOOPSET_KEY) toggleLoopset() ;
 	else if (kev->keysym == RECORD_KEY)
@@ -135,7 +182,11 @@ else if (kev->keysym == RECORD_KEY) printf("handleKeypress() key is RECORD_KEY\n
 }
 
 void Handsfree::toggleLoopset()
-	{ this->nextLoopsetIdx = (this->nextLoopsetIdx + 1) % N_LOOPSETS ; }
+{
+	this->nextLoopsetIdx = (this->nextLoopsetIdx + 1) % N_LOOPSETS ;
+
+if (critters) printf(TOGGLE_LOOPSET_DBG , this->nextLoopsetIdx) ;
+}
 
 void Handsfree::triggerLoops()
 {

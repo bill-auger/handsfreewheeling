@@ -50,8 +50,9 @@
 #include "fweelin_paramset.h"
 #include "fweelin_looplibrary.h"
 
-
+#if HANDSFREE
 Handsfree* Fweelin::HandsfreeInst = 0 ; // HANDSFREE
+#endif // HANDSFREE
 
 const float Loop::MIN_VOL = 0.01;
 PreallocatedType *Loop::loop_pretype = 0;
@@ -3197,8 +3198,6 @@ int Fweelin::go()
   // Broadcast events for starting all interfaces!
   cfg->StartInterfaces();
 
-	HandsfreeInst = new Handsfree(this) ; // HANDSFREE
-
   // Encourage the user!
   printf("\n-- ** OKIE DOKIE, KIDDO! ** --\n");
 
@@ -3259,6 +3258,10 @@ int Fweelin::go()
   printf(" 3\n");
   delete bmg;
   printf(" 4\n");
+
+#if HANDSFREE
+  printf(" 5\n") ; delete HandsfreeInst ;
+#endif HANDSFREE
 
   printf("MAIN: end stage 2\n");
 
@@ -3503,6 +3506,9 @@ int Fweelin::setup()
   // Memory manager
   mmg = new MemoryManager();
 
+  // Event manager
+  emg = new EventManager(); // HANDSFREE (see note line 3560)
+
   // Load configuration from .rc file
   cfg = new FloConfig(this);
 
@@ -3550,11 +3556,22 @@ int Fweelin::setup()
     cfg->AddEmptyVariable(tmp);
   }
 
+	// Handsfree controller
+	// NOTE: System vars must be declared before cfg->Parse() is called in order
+	//		for them to be accessible in the xml cfg
+	//	Initialization of the Handsfree class depends on instances of FloConfig and EventManager
+	//		but the EventManager was originally instantiated just after the call to cfg->Parse()
+	//		so in order to keep as much of the handsfree related code in the Handsfree class
+	//		instantiation of the EventManager was moved to before the system var declarations
+	//		if this is found to cause problems we will need to declare the handsfree system vars
+	//		in this file (before the call to cfg->Parse()) and link them below with the rest
+	HandsfreeInst = new Handsfree(this) ; // HANDSFREE
+
   // Now parse and setup config
   cfg->Parse();
 
   // Event manager
-  emg = new EventManager();
+//  emg = new EventManager(); // HANDSFREE (see note line 3560)
 
   vid = new VideoIO(this);
   if (vid->activate()) {

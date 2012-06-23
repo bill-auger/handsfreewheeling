@@ -934,7 +934,9 @@ class Fweelin : public EventProducer, public BrowserCallback {
     sync_type(0), sync_speed(1), running(0) {};
   ~Fweelin() {};
 
+#if HANDSFREE
 	static Handsfree* HandsfreeInst ; // HANDSFREE
+#endif // HANDSFREE
 
   char IsRunning() { return running; };
 
